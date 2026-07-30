@@ -4,7 +4,7 @@ import { Calendar, Clock, Trash2, Plus, Upload, X, AlertCircle, Check } from "lu
 import { useAdminAuth } from "../../context/AuthContext";
 import { addServiceStyles } from "../../assets/dummyStyles";
 
-const API_BASE = "http://localhost:4000";
+const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
 
 export default function AddService({ serviceId: serviceIdProp, onSuccess }) {
   const { getToken } = useAdminAuth();

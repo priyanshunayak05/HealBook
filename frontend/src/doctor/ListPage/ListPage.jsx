@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Calendar, CheckCircle, XCircle, Search, User, Phone, BadgeIndianRupee } from "lucide-react";
 import { listPageStyles } from "../../assets/dummyStyles";
 
-const API_BASE = "http://localhost:4000";
+const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
 
 function parseDateTime(date, time) {
   return new Date(`${date}T${time || "00:00"}:00`);

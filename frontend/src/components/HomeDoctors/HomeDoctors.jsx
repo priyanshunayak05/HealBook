@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Calendar, Briefcase, Loader2 } from "lucide-react";
 import { homeDoctorsStyles, doctorsPageStyles } from "../../assets/dummyStyles";
 
-const API_BASE = "http://localhost:4000";
+const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
 
 export default function HomeDoctors() {
   const [doctors, setDoctors] = useState([]);

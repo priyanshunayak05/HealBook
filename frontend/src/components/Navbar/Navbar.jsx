@@ -6,7 +6,7 @@ import logo from "../../assets/logo.png";
 import { navbarStyles as s } from "../../assets/dummyStyles";
 
 const STORAGE_KEY = "doctorToken_v1";
-const API_BASE = "http://localhost:4000";
+const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);

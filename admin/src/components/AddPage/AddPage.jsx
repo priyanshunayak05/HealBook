@@ -225,7 +225,7 @@ export default function AddPage() {
 
       if (form.imageFile) fd.append("image", form.imageFile);
 
-      const API_BASE = "http://localhost:4000/api";
+      const API_BASE = `${(import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "")}/api`;
       const token = await getToken();
 
       const res = await fetch(`${API_BASE}/doctors`, {

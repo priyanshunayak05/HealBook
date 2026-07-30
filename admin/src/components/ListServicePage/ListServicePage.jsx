@@ -17,7 +17,7 @@ import AddService from "../AddService/AddService";
 
 export default function ListServicePage() {
   const { getToken } = useAdminAuth();
-  const API_BASE = "http://localhost:4000";
+  const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
 
   const [services, setServices] = useState([]);
   const [viewMode, setViewMode] = useState("list"); // "list" or "add"

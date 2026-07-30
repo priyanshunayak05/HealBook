@@ -23,7 +23,7 @@ export default function DoctorProfilePage() {
   const [imagePreview, setImagePreview] = useState("");
   const [imageFile, setImageFile] = useState(null);
 
-  const API_BASE = "http://localhost:4000";
+  const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
 
   useEffect(() => {
     async function loadDoctorProfile() {

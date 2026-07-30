@@ -44,14 +44,23 @@ const limiter = rateLimit({
 app.use("/api", limiter);
 
 // Middlewares
-const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) === -1) {
-        const msg = "The CORS policy for this site does not allow access from the specified Origin.";
-        return callback(new Error(msg), false);
+      if (
+        allowedOrigins.indexOf(origin) !== -1 ||
+        origin.endsWith(".onrender.com") ||
+        origin.endsWith(".vercel.app") ||
+        origin.endsWith(".netlify.app")
+      ) {
+        return callback(null, true);
       }
       return callback(null, true);
     },

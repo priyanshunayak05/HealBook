@@ -23,7 +23,7 @@ export default function AnalyticsPage() {
   const [charts, setCharts] = useState(null);
   const [error, setError] = useState("");
 
-  const API_BASE = "http://localhost:4000";
+  const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
   const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
   useEffect(() => {

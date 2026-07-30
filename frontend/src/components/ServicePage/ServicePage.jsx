@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Activity, Loader2 } from "lucide-react";
 import { servicePageStyles, serviceCardStyles } from "../../assets/dummyStyles";
 
-const API_BASE = "http://localhost:4000";
+const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
 const PlaceholderImg = "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=400&q=80";
 
 const ServiceCard = ({ service }) => {

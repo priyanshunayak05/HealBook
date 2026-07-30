@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { CheckCircle, XCircle, Loader2, Calendar, ArrowRight } from "lucide-react";
 
-const API_BASE = "http://localhost:4000";
+const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
 
 export default function AppointmentSuccess() {
   const [searchParams] = useSearchParams();

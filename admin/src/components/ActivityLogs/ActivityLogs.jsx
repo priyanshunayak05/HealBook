@@ -9,7 +9,7 @@ export default function ActivityLogs() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const API_BASE = "http://localhost:4000";
+  const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
 
   const loadLogs = async () => {
     try {

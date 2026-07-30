@@ -3,7 +3,7 @@ import { useAdminAuth } from "../../context/AuthContext";
 import { Calendar, Search, BadgeIndianRupee, AlertCircle, Loader2, Check, XCircle, Clock, Edit } from "lucide-react";
 import { pageStyles, statusClasses } from "../../assets/dummyStyles";
 
-const API_BASE = "http://localhost:4000";
+const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
 
 function formatDateISO(iso) {
   try {

@@ -3,7 +3,7 @@ import { Calendar, CheckCircle, XCircle, BadgeIndianRupee, Search, ShieldCheck, 
 import { useAdminAuth } from "../../context/AuthContext";
 import { serviceDashboardStyles } from "../../assets/dummyStyles";
 
-const API_BASE = "http://localhost:4000";
+const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
 
 function normalizeService(doc) {
   if (!doc) return null;

@@ -22,7 +22,7 @@ export default function DepartmentManagement() {
   const [error, setError] = useState("");
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  const API_BASE = "http://localhost:4000";
+  const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
 
   const loadData = async () => {
     try {

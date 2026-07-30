@@ -81,7 +81,7 @@ export default function AdminDashboard() {
   const [query, setQuery] = useState("");
   const [showAll, setShowAll] = useState(false);
 
-  const API_BASE = "http://localhost:4000";
+  const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
   const PATIENT_COUNT_API = `${API_BASE}/api/patients/count`;
 
   useEffect(() => {
