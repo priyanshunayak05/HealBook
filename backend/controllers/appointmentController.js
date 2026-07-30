@@ -15,7 +15,7 @@ const buildFrontendBase = (req) => {
   if (origin) return origin.replace(/\/$/, "");
   const host = req.get("host");
   if (host) return `${req.protocol || "http"}://${host}`.replace(/\/$/, "");
-  return "http://localhost:5173";
+  return "https://heal-book-frontend.vercel.app";
 };
 
 function resolveClerkUserId(req) {

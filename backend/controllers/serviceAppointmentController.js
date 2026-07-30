@@ -35,7 +35,7 @@ const buildFrontendBase = (req) => {
   const env = process.env.FRONTEND_URL;
   if (env) return env.replace(/\/$/, "");
   const origin = req.get("origin") || req.get("referer") || null;
-  return origin ? origin.replace(/\/$/, "") : "http://localhost:5173";
+  return origin ? origin.replace(/\/$/, "") : "https://heal-book-frontend.vercel.app";
 };
 
 function resolveClerkUserId(req) {
