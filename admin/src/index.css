@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px) scale(.995); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.glow {
+  position: relative;
+}
+.glow::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(90deg, #10b981, #3b82f6, #10b981);
+  background-size: 200% auto;
+  border-radius: 9999px;
+  filter: blur(8px);
+  opacity: 0.15;
+  z-index: -1;
+}
+
+.center-inner::-webkit-scrollbar {
+  display: none;
+}
+.center-inner {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
