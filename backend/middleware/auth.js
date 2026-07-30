@@ -146,8 +146,11 @@ const authenticate = async (req, res, next) => {
 
           // Create new record if still not found
           if (!account) {
-            const origin = req.headers.origin || "";
-            const isAdminPortal = origin.includes("5174") || req.originalUrl.includes("/admin") || req.originalUrl.includes("/doctor");
+            const isAdminPortal =
+              origin.includes("5174") ||
+              origin.includes("heal-book-admin") ||
+              req.originalUrl.includes("/admin") ||
+              req.originalUrl.includes("/doctor");
 
             if (isAdminPortal) {
               account = new Admin({
