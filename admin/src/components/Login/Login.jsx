@@ -11,11 +11,11 @@ export default function Login() {
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
-      navigate("/h");
+      navigate("/h", { replace: true });
     }
   }, [isLoaded, isSignedIn, navigate]);
 
-  if (!isLoaded) {
+  if (!isLoaded || isSignedIn) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 font-sans">
         <Loader2 className="w-10 h-10 text-emerald-600 animate-spin mb-4" />

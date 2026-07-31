@@ -146,6 +146,7 @@ const authenticate = async (req, res, next) => {
 
           // Create new record if still not found
           if (!account) {
+            const origin = req.get("origin") || req.get("referer") || "";
             const isAdminPortal =
               origin.includes("5174") ||
               origin.includes("heal-book-admin") ||
