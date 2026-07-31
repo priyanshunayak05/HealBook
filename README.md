@@ -11,6 +11,16 @@
 
 ---
 
+## 🌐 Live Deployments
+
+| Tier / Component | Live URL | Platform |
+| :--- | :--- | :--- |
+| 🌐 **Patient Web Application** | [https://heal-book-frontend.vercel.app](https://heal-book-frontend.vercel.app) | Vercel |
+| 🛡️ **Admin & Doctor Portal** | [https://heal-book-admin-zeta.vercel.app](https://heal-book-admin-zeta.vercel.app) | Vercel |
+| ⚙️ **Backend REST API** | [https://healbook-backend.onrender.com](https://healbook-backend.onrender.com) | Render |
+
+---
+
 ## 🌟 Features Overview
 
 ### 👨‍⚕️ Patient Web Application
