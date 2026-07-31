@@ -8,8 +8,8 @@ const router = express.Router();
 
 router.get("/", getServices);
 router.get("/:id", getServiceById);
-router.post("/", protect, authorize("admin"), upload.single("image"), createService);
-router.put("/:id", protect, authorize("admin"), upload.single("image"), updateService);
-router.delete("/:id", protect, authorize("admin"), deleteService);
+router.post("/", protect, authorize("admin", "superadmin"), upload.single("image"), createService);
+router.put("/:id", protect, authorize("admin", "superadmin"), upload.single("image"), updateService);
+router.delete("/:id", protect, authorize("admin", "superadmin"), deleteService);
 
 module.exports = router;

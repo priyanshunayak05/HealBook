@@ -386,14 +386,6 @@ function sortSlotsForDisplay(slots = []) {
           message: "Please select AM or PM for all slots.",
         };
       }
-      const slotTs = slotDateTimeToMs(slot);
-      if (slotTs <= Date.now()) {
-        return {
-          valid: false,
-          message:
-            "One or more slots are in the past. Please pick future date/time for all slots.",
-        };
-      }
     }
     return { valid: true };
   }
