@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Link, useLocation, useParams, useNavigate } from "react-router-dom";
-import { Home, Calendar, Edit, LogOut } from "lucide-react";
+import { Home, Calendar, Users, FileText, Share2, Edit, LogOut } from "lucide-react";
 import logo from "../../assets/logo.png";
 
 const STORAGE_KEY = "doctorToken_v1";
@@ -24,6 +24,8 @@ export default function Navbar() {
   const navItems = [
     { name: "Dashboard", to: `${basePath}`, Icon: Home },
     { name: "Appointments", to: `${basePath}/appointments`, Icon: Calendar },
+    { name: "My Patients", to: `${basePath}/patients`, Icon: Users },
+    { name: "Referrals", to: `${basePath}/referrals`, Icon: Share2 },
     { name: "Edit Profile", to: `${basePath}/profile/edit`, Icon: Edit },
   ];
 

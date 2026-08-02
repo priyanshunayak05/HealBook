@@ -2,6 +2,9 @@ const mongoose = require("mongoose");
 
 const serviceAppointmentSchema = new mongoose.Schema(
   {
+    userId: { type: String, index: true },
+    patientEmail: { type: String, lowercase: true, trim: true, index: true },
+    email: { type: String, lowercase: true, trim: true, index: true },
     patientName: {
       type: String,
       required: true,

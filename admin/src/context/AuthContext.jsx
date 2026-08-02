@@ -11,7 +11,22 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
+  const getBackendUrl = () => {
+    if (import.meta.env.VITE_BACKEND_URL) {
+      return import.meta.env.VITE_BACKEND_URL.replace(/\/$/, "");
+    }
+    if (
+      typeof window !== "undefined" &&
+      (window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1" ||
+        window.location.hostname.startsWith("192.168."))
+    ) {
+      return "http://localhost:4000";
+    }
+    return "https://healbook-backend.onrender.com";
+  };
+
+  const API_BASE = getBackendUrl();
 
   useEffect(() => {
     const fetchUserProfile = async () => {

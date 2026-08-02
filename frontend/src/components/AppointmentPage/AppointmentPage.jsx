@@ -156,6 +156,32 @@ export default function AppointmentPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
 
+  const [medicalRecords, setMedicalRecords] = useState([]);
+  const [patientPrescriptions, setPatientPrescriptions] = useState([]);
+  const [loadingRecords, setLoadingRecords] = useState(false);
+
+  const loadPatientMedicalData = useCallback(async () => {
+    if (!isLoaded || !user?.id) return;
+    setLoadingRecords(true);
+    try {
+      const token = await getToken();
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const pId = user.id;
+
+      const [recRes, presRes] = await Promise.all([
+        API.get(`/api/medical-records/patient/${pId}`, { headers }).catch(() => null),
+        API.get(`/api/patient/${pId}/prescriptions`, { headers }).catch(() => null),
+      ]);
+
+      if (recRes?.data?.success) setMedicalRecords(recRes.data.data || []);
+      if (presRes?.data?.success) setPatientPrescriptions(presRes.data.data || []);
+    } catch (err) {
+      console.warn("Load patient medical data error:", err);
+    } finally {
+      setLoadingRecords(false);
+    }
+  }, [isLoaded, user, getToken]);
+
   const handleDeleteAccount = async () => {
     setDeletingAccount(true);
     try {
@@ -363,12 +389,14 @@ export default function AppointmentPage() {
   useEffect(() => {
     loadDoctorAppointments();
     loadServiceAppointments();
+    loadPatientMedicalData();
   }, [
     isLoaded,
     isSignedIn,
     user,
     loadDoctorAppointments,
     loadServiceAppointments,
+    loadPatientMedicalData,
   ]);
 
   function normalizeRescheduled(rt) {
@@ -710,6 +738,63 @@ export default function AppointmentPage() {
                 ) : null}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Patient Medical History & Prescriptions Section */}
+        {medicalRecords.length > 0 && (
+          <div className="mt-12 pt-8 border-t border-slate-200 space-y-6">
+            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <Calendar className="text-blue-600 w-6 h-6" />
+              My Consultation Medical History & Prescriptions
+            </h2>
+
+            <div className="space-y-4">
+              {medicalRecords.map((rec) => (
+                <div key={rec._id} className="bg-white rounded-3xl p-6 border border-blue-100 shadow-xs space-y-4">
+                  <div className="flex flex-wrap justify-between items-start border-b border-slate-100 pb-3">
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-base">{rec.diagnosis || "Medical Consultation"}</h3>
+                      <p className="text-xs text-blue-600 font-semibold">{rec.doctorName} • {rec.departmentName || "Specialist"}</p>
+                    </div>
+                    <span className="px-3 py-1 bg-blue-50 text-blue-700 font-bold rounded-full text-xs">
+                      {rec.date}
+                    </span>
+                  </div>
+
+                  {rec.symptoms && (
+                    <div className="text-xs text-slate-600">
+                      <span className="font-bold text-slate-700">Symptoms: </span>{rec.symptoms}
+                    </div>
+                  )}
+
+                  {rec.prescription && rec.prescription.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="text-xs font-bold text-slate-800">Prescribed Medications:</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {rec.prescription.map((m, i) => (
+                          <div key={i} className="p-3 bg-blue-50/50 border border-blue-100 rounded-2xl text-xs flex justify-between items-center">
+                            <div>
+                              <span className="font-bold text-slate-800">{m.medicineName}</span>
+                              <span className="text-slate-500 ml-1">({m.dosage})</span>
+                            </div>
+                            <div className="text-right text-[11px] text-blue-700 font-semibold">
+                              {m.frequency} • {m.duration}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {rec.doctorNotes && (
+                    <div className="text-xs text-slate-600 bg-amber-50/60 p-3 rounded-2xl border border-amber-100">
+                      <span className="font-bold text-amber-900">Advice & Doctor Notes: </span>{rec.doctorNotes}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

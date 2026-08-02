@@ -20,6 +20,14 @@ const serviceAppointmentRoutes = require("./routes/serviceAppointmentRoutes");
 const departmentRoutes = require("./routes/departmentRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const doctorPanelRoutes = require("./routes/doctorPanelRoutes");
+const medicalRecordRoutes = require("./routes/medicalRecordRoutes");
+const referralRoutes = require("./routes/referralRoutes");
+const {
+  getPatientPrescriptions,
+  getPatientMedicalHistory,
+  createMedicalRecord,
+} = require("./controllers/medicalRecordController");
+const { authenticate } = require("./middleware/auth");
 const User = require("./models/User");
 
 // Connect to Database
@@ -28,7 +36,11 @@ connectDB();
 const app = express();
 
 // Security Middlewares
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 app.use(mongoSanitize());
 
 // Rate Limiter
@@ -74,7 +86,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve uploads folder statically if needed
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    next();
+  },
+  express.static(path.join(__dirname, "uploads"))
+);
 
 // Mount API routes
 app.use("/api/auth", authRoutes);
@@ -86,6 +106,11 @@ app.use("/api/service-appointments", serviceAppointmentRoutes);
 app.use("/api/departments", departmentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/doctor", doctorPanelRoutes);
+app.use("/api/medical-records", medicalRecordRoutes);
+app.use("/api/referrals", referralRoutes);
+app.get("/api/patients/:patientId/history", authenticate, getPatientMedicalHistory);
+app.get("/api/patient/:patientId/prescriptions", authenticate, getPatientPrescriptions);
+app.post("/api/consultations/create", authenticate, createMedicalRecord);
 
 // Patient count endpoint for admin dashboard
 app.get("/api/patients/count", async (req, res) => {

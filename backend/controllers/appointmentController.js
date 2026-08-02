@@ -66,12 +66,13 @@ const getAppointments = async (req, res) => {
       const orConditions = [
         { createdBy: { $in: ids } },
         { createdBy: { $in: validObjectIds } },
+        { userId: { $in: ids } },
         { patientClerkId: { $in: ids } }
       ];
 
       const emailsToMatch = Array.from(new Set([userEmail, queryEmail].filter(Boolean)));
       if (emailsToMatch.length > 0) {
-        orConditions.push({ email: { $in: emailsToMatch } });
+        orConditions.push({ email: { $in: emailsToMatch } }, { patientEmail: { $in: emailsToMatch } });
       }
 
       filter.$or = orConditions;
@@ -101,6 +102,9 @@ const getAppointments = async (req, res) => {
     const normalized = items.map((a) => ({
       _id: a._id,
       id: a._id,
+      userId: a.userId || a.createdBy,
+      patientEmail: a.patientEmail || a.email,
+      email: a.email || a.patientEmail,
       patientName: a.patientName,
       mobile: a.mobile,
       age: a.age,
@@ -111,6 +115,8 @@ const getAppointments = async (req, res) => {
       doctorImage: a.doctorImage,
       date: a.date,
       time: a.time,
+      appointmentDate: a.date,
+      appointmentTime: a.time,
       fees: a.fees,
       fee: a.fees,
       status: a.status,
@@ -225,6 +231,13 @@ const getAppointmentsByDoctor = async (req, res) => {
 // @access  Private/Patient
 const createAppointment = async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: You must be logged in to create an appointment.",
+      });
+    }
+
     const {
       doctorId,
       patientName,
@@ -237,6 +250,8 @@ const createAppointment = async (req, res) => {
       fees,
       notes = "",
       email,
+      patientEmail,
+      userId: userIdFromBody,
       paymentMethod,
       owner: ownerFromBody = null,
       doctorName: doctorNameFromBody,
@@ -244,6 +259,33 @@ const createAppointment = async (req, res) => {
       doctorImageUrl: doctorImageUrlFromBody,
       doctorImagePublicId: doctorImagePublicIdFromBody,
     } = req.body || {};
+
+    const authClerkId = String(req.user.clerkId || req.user.id || req.user._id || resolveClerkUserId(req) || "").trim();
+    const authEmail = String(req.user.email || req.auth?.email || "").toLowerCase().trim();
+    const authName = req.user.name || String(patientName || "").trim();
+
+    if (!authClerkId || !authEmail) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: Unable to verify authenticated user session details.",
+      });
+    }
+
+    // Security check: reject if request body attempts to use another user's ID or email
+    if (userIdFromBody && String(userIdFromBody).trim() !== authClerkId) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: You cannot create an appointment using another person's user ID.",
+      });
+    }
+
+    const requestedEmail = String(email || patientEmail || "").toLowerCase().trim();
+    if (requestedEmail && requestedEmail !== authEmail) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: You cannot create an appointment using another person's email address.",
+      });
+    }
 
     if (!doctorId) return res.status(400).json({ success: false, message: "Doctor ID is required" });
     if (!patientName) return res.status(400).json({ success: false, message: "Patient Name is required" });
@@ -260,7 +302,6 @@ const createAppointment = async (req, res) => {
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) return res.status(404).json({ success: false, message: "Doctor not found" });
 
-    const clerkUserId = resolveClerkUserId(req) || (req.user ? req.user.clerkId || req.user.id || req.user._id : "guest");
     const numericFee = safeNumber(fees ?? fee ?? doctor.fee ?? 0);
 
     let resolvedOwner = ownerFromBody || doctor.owner || null;
@@ -287,22 +328,24 @@ const createAppointment = async (req, res) => {
     const doctorImage = { url: doctorImageUrl, publicId: doctorImagePublicId };
 
     const base = {
+      userId: authClerkId,
+      patientEmail: authEmail,
+      email: authEmail,
+      patientName: String(patientName || authName).trim(),
+      mobile: String(mobile).trim(),
+      age: age ? Number(age) : undefined,
+      gender: gender ? String(gender) : "",
       doctorId: String(doctor._id || doctorId),
       doctorName,
       speciality,
       doctorImage,
-      patientName: String(patientName).trim(),
-      mobile: String(mobile).trim(),
-      age: age ? Number(age) : undefined,
-      gender: gender ? String(gender) : "",
       date: String(date),
       time: String(time),
       fees: numericFee,
       status: "Pending",
       payment: { method: paymentMethod === "Cash" ? "Cash" : "Online", status: "Pending", amount: numericFee },
       notes: notes || "",
-      createdBy: clerkUserId,
-      email: (email || req.user?.email || "").toLowerCase(),
+      createdBy: authClerkId,
       owner: resolvedOwner,
       sessionId: null,
     };

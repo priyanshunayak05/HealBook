@@ -54,6 +54,13 @@ function resolveClerkUserId(req) {
 // @access  Private/Patient
 const createServiceAppointment = async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: You must be logged in to create a service appointment.",
+      });
+    }
+
     const body = req.body || {};
     const {
       serviceId,
@@ -71,11 +78,40 @@ const createServiceAppointment = async (req, res) => {
       amount: amountFromBody,
       fees: feesFromBody,
       email,
+      patientEmail,
+      userId: userIdFromBody,
       meta = {},
       notes = "",
       serviceImageUrl: serviceImageUrlFromBody,
       serviceImagePublicId: serviceImagePublicIdFromBody,
     } = body;
+
+    const authClerkId = String(req.user.clerkId || req.user.id || req.user._id || resolveClerkUserId(req) || "").trim();
+    const authEmail = String(req.user.email || req.auth?.email || "").toLowerCase().trim();
+    const authName = req.user.name || String(patientName || "").trim();
+
+    if (!authClerkId || !authEmail) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: Unable to verify authenticated user session details.",
+      });
+    }
+
+    // Security check: reject if request body attempts to use another user's ID or email
+    if (userIdFromBody && String(userIdFromBody).trim() !== authClerkId) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: You cannot create an appointment using another person's user ID.",
+      });
+    }
+
+    const requestedEmail = String(email || patientEmail || "").toLowerCase().trim();
+    if (requestedEmail && requestedEmail !== authEmail) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: You cannot create an appointment using another person's email address.",
+      });
+    }
 
     if (!serviceId) return res.status(400).json({ success: false, message: "serviceId is required" });
     if (!patientName || !String(patientName).trim()) return res.status(400).json({ success: false, message: "patientName is required" });
@@ -108,13 +144,11 @@ const createServiceAppointment = async (req, res) => {
       return res.status(400).json({ success: false, message: "Time missing or invalid — provide time string or hour, minute and ampm." });
     }
 
-    const clerkUserId = resolveClerkUserId(req) || (req.user ? req.user.id || req.user._id : "guest");
-
     // DUPLICATE BOOKING CHECK
     try {
       const existing = await ServiceAppointment.findOne({
         serviceId: String(serviceId),
-        createdBy: clerkUserId,
+        createdBy: authClerkId,
         date: String(date),
         hour: Number(finalHour),
         minute: Number(finalMinute),
@@ -136,10 +170,13 @@ const createServiceAppointment = async (req, res) => {
     const finalServiceImagePublicId = (svcImagePublicIdFromDB && svcImagePublicIdFromDB.length) ? svcImagePublicIdFromDB : ((serviceImagePublicIdFromBody && String(serviceImagePublicIdFromBody).trim()) || "");
 
     const base = {
+      userId: authClerkId,
+      patientEmail: authEmail,
+      email: authEmail,
       serviceId,
       serviceName: resolvedServiceName,
       serviceImage: { url: finalServiceImageUrl, publicId: finalServiceImagePublicId },
-      patientName: String(patientName).trim(),
+      patientName: String(patientName || authName).trim(),
       mobile: String(mobile).trim(),
       age: age ? Number(age) : undefined,
       gender: gender || "",
@@ -148,7 +185,7 @@ const createServiceAppointment = async (req, res) => {
       minute: Number(finalMinute),
       ampm: finalAmpm,
       fees: numericAmount,
-      createdBy: clerkUserId,
+      createdBy: authClerkId,
       notes: notes || "",
     };
 

@@ -8,7 +8,7 @@ import {
   Phone,
 } from "lucide-react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth, useUser, useClerk } from "@clerk/clerk-react";
 import toast, { Toaster } from "react-hot-toast";
 import { serviceDetailStyles, iconSize } from "../../assets/dummyStyles";
 
@@ -19,6 +19,8 @@ export default function ServiceDetail() {
   const navigate = useNavigate();
 
   const { isSignedIn, userId, getToken } = useAuth();
+  const { user } = useUser();
+  const clerk = useClerk();
 
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
@@ -28,6 +30,15 @@ export default function ServiceDetail() {
   const [gender, setGender] = useState("");
 
   const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    if (user) {
+      const userEmail = (user.emailAddresses && user.emailAddresses[0]?.emailAddress) || user.primaryEmailAddress?.emailAddress || user.primaryEmailAddress || "";
+      const userName = user.fullName || `${user.firstName || ""} ${user.lastName || ""}`.trim() || "";
+      if (userEmail) setEmail(userEmail);
+      if (userName && !customerName) setCustomerName(userName);
+    }
+  }, [user]);
   const [paymentMethod, setPaymentMethod] = useState("Online");
 
   const [service, setService] = useState(null);
@@ -275,7 +286,10 @@ export default function ServiceDetail() {
     }
 
     if (!isSignedIn) {
-      toast.error("Please sign in to create a booking.");
+      toast.error("Please sign in to book a service appointment.");
+      if (clerk && clerk.openSignIn) {
+        clerk.openSignIn();
+      }
       return;
     }
 
@@ -512,10 +526,11 @@ export default function ServiceDetail() {
 
               <input
                 type="email"
-                placeholder="Email (optional)"
+                placeholder="Account Email (Verified)"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={serviceDetailStyles.emailInput}
+                readOnly
+                disabled
+                className={`${serviceDetailStyles.emailInput} bg-slate-100 text-slate-500 cursor-not-allowed opacity-90`}
               />
             </div>
 

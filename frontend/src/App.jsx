@@ -26,6 +26,9 @@ import DoctorNavbar from "./doctor/Navbar/Navbar";
 import DoctorDashboard from "./doctor/DashboardPage/DashboardPage";
 import DoctorAppointments from "./doctor/ListPage/ListPage";
 import DoctorEditProfile from "./doctor/EditProfilePage/EditProfilePage";
+import DoctorPatients from "./doctor/PatientsPage/PatientsPage";
+import PatientProfile from "./doctor/PatientProfilePage/PatientProfilePage";
+import DoctorReferrals from "./doctor/ReferralsPage/ReferralsPage";
 
 const ScrollButton = () => {
   const [visible, setVisible] = useState(false);
@@ -194,6 +197,9 @@ function DoctorLayout() {
         <Routes>
           <Route path="/" element={<DoctorDashboard />} />
           <Route path="/appointments" element={<DoctorAppointments />} />
+          <Route path="/patients" element={<DoctorPatients />} />
+          <Route path="/referrals" element={<DoctorReferrals />} />
+          <Route path="/patient/:patientId" element={<PatientProfile />} />
           <Route path="/profile/edit" element={<DoctorEditProfile />} />
         </Routes>
       </main>

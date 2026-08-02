@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Calendar, CheckCircle, XCircle, Search, User, Phone, BadgeIndianRupee } from "lucide-react";
+import { Calendar, CheckCircle, XCircle, Search, User, Phone, BadgeIndianRupee, Activity, Plus } from "lucide-react";
 import { listPageStyles } from "../../assets/dummyStyles";
+import AddMedicalRecordModal from "../AddMedicalRecordModal/AddMedicalRecordModal";
 
 const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
 
@@ -112,9 +113,16 @@ function normalizeAppointment(a) {
   const paymentMethod = a.payment?.method || a.paymentMethod || "Cash";
   const paymentStatus = a.payment?.status || a.paymentStatus || "Pending";
 
+  const email = a.email || a.patientEmail || "";
+  const patientId = a.createdBy || a.userId || a.patientClerkId || a.patientId || email || id;
+
   return {
     id,
     patient,
+    patientId,
+    email,
+    createdBy: a.createdBy || a.userId || patientId,
+    userId: a.userId || a.createdBy || patientId,
     age,
     gender,
     doctorName,
@@ -338,6 +346,8 @@ export default function ListPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeRecordAppt, setActiveRecordAppt] = useState(null);
+  const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
   const params = useParams();
   const doctorId = params.id;
 
@@ -582,6 +592,27 @@ export default function ListPage() {
                     </div>
                     <div className={listPageStyles.feeText}>Fees: ₹{a.fee}</div>
                   </div>
+
+                  <div className="mt-3 pt-3 border-t border-slate-100 flex gap-2">
+                    <button
+                      onClick={() => {
+                        setActiveRecordAppt(a);
+                        setIsRecordModalOpen(true);
+                      }}
+                      className="flex-1 py-1.5 px-3 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1"
+                    >
+                      <Plus size={14} />
+                      <span>Add Record</span>
+                    </button>
+
+                    <Link
+                      to={`../patient/${encodeURIComponent(a.patientId)}`}
+                      className="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1"
+                    >
+                      <Activity size={14} />
+                      <span>Patient Profile</span>
+                    </Link>
+                  </div>
                 </div>
 
                 <div className={listPageStyles.rescheduleContainer}>
@@ -595,6 +626,18 @@ export default function ListPage() {
           </div>
         )}
       </div>
+
+      <AddMedicalRecordModal
+        isOpen={isRecordModalOpen}
+        onClose={() => setIsRecordModalOpen(false)}
+        appointment={activeRecordAppt?.raw || activeRecordAppt}
+        patient={{
+          patientId: activeRecordAppt?.patientId,
+          name: activeRecordAppt?.patient,
+          email: activeRecordAppt?.email,
+          clerkId: activeRecordAppt?.patientId,
+        }}
+      />
     </div>
   );
 }

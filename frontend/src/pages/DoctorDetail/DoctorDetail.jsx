@@ -19,7 +19,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // Clerk client hooks
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { useAuth, useUser, useClerk } from "@clerk/clerk-react";
 import { doctorDetailStyles } from "../../assets/dummyStyles";
 
 const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
@@ -113,12 +113,13 @@ export default function DoctorDetail() {
   // Clerk hooks
   const { getToken, isLoaded: authLoaded } = useAuth();
   const { isSignedIn, user, isLoaded: userLoaded } = useUser();
+  const clerk = useClerk();
 
   useEffect(() => {
     setIsVisible(true);
   }, []);
 
-  // Prefill the form fields quietly if user is available (no UI markup change)
+  // Prefill the form fields quietly if user is available
   useEffect(() => {
     if (!userLoaded) return;
     if (user) {
@@ -135,6 +136,7 @@ export default function DoctorDetail() {
       const phone = normalizePhoneTo10(rawPhone);
       const email =
         (user.emailAddresses && user.emailAddresses[0]?.emailAddress) ||
+        user.primaryEmailAddress?.emailAddress ||
         user.primaryEmailAddress ||
         "";
 
@@ -142,7 +144,7 @@ export default function DoctorDetail() {
         ...prev,
         name: prev.name || fullName,
         mobile: prev.mobile || phone,
-        email: prev.email || email,
+        email: email || prev.email,
       }));
     }
   }, [userLoaded, user]);
@@ -252,10 +254,13 @@ export default function DoctorDetail() {
     }
 
     if (!isSignedIn) {
-      toast.error("You must sign in to create an appointment.", {
+      toast.error("Please sign in to book an appointment.", {
         position: "top-center",
         autoClose: 2200,
       });
+      if (clerk && clerk.openSignIn) {
+        clerk.openSignIn();
+      }
       return;
     }
 
@@ -656,12 +661,11 @@ export default function DoctorDetail() {
 
                     <input
                       type="email"
-                      placeholder="Email (optional - for receipts)"
-                      className={doctorDetailStyles.emailInput}
+                      placeholder="Account Email (Verified)"
+                      className={`${doctorDetailStyles.emailInput} bg-slate-100 text-slate-500 cursor-not-allowed opacity-90`}
                       value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
+                      readOnly
+                      disabled
                     />
                   </div>
                 </div>

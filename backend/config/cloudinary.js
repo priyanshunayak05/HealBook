@@ -39,7 +39,8 @@ const getCredentials = () => {
 const getLocalFallback = (filePath) => {
   const filename = path.basename(filePath);
   const port = process.env.PORT || 4000;
-  const localUrl = `http://localhost:${port}/uploads/${filename}`;
+  const baseUrl = (process.env.BACKEND_URL || `http://localhost:${port}`).replace(/\/$/, "");
+  const localUrl = `${baseUrl}/uploads/${filename}`;
   return {
     secure_url: localUrl,
     url: localUrl,
