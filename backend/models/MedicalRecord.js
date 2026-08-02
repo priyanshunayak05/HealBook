@@ -3,9 +3,9 @@ const mongoose = require("mongoose");
 const prescriptionItemSchema = new mongoose.Schema(
   {
     medicineName: { type: String, required: true, trim: true },
-    dosage: { type: String, default: "", trim: true }, // e.g. "5mg", "500mg"
-    frequency: { type: String, default: "", trim: true }, // e.g. "Once daily", "2 times/day"
-    duration: { type: String, default: "", trim: true }, // e.g. "30 days", "5 days"
+    dosage: { type: String, default: "", trim: true },
+    frequency: { type: String, default: "", trim: true },
+    duration: { type: String, default: "", trim: true },
   },
   { _id: false }
 );
@@ -22,12 +22,18 @@ const reportSchema = new mongoose.Schema(
 const medicalRecordSchema = new mongoose.Schema(
   {
     patientId: {
-      type: String, // Clerk ID or Mongoose User ID
+      type: mongoose.Schema.Types.Mixed, // Patient ObjectId or Patient string ID
       required: true,
+      index: true,
+    },
+    patientRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Patient",
       index: true,
     },
     patientName: { type: String, default: "", trim: true },
     patientEmail: { type: String, default: "", lowercase: true, trim: true, index: true },
+    bloodGroup: { type: String, default: "", trim: true },
     doctorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Doctor",

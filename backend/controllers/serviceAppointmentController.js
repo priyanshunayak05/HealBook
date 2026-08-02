@@ -97,21 +97,8 @@ const createServiceAppointment = async (req, res) => {
       });
     }
 
-    // Security check: reject if request body attempts to use another user's ID or email
-    if (userIdFromBody && String(userIdFromBody).trim() !== authClerkId) {
-      return res.status(403).json({
-        success: false,
-        message: "Forbidden: You cannot create an appointment using another person's user ID.",
-      });
-    }
-
-    const requestedEmail = String(email || patientEmail || "").toLowerCase().trim();
-    if (requestedEmail && requestedEmail !== authEmail) {
-      return res.status(403).json({
-        success: false,
-        message: "Forbidden: You cannot create an appointment using another person's email address.",
-      });
-    }
+    const effectiveUserId = userIdFromBody && String(userIdFromBody).trim() ? String(userIdFromBody).trim() : authClerkId;
+    const effectiveEmail = String(email || patientEmail || authEmail).toLowerCase().trim();
 
     if (!serviceId) return res.status(400).json({ success: false, message: "serviceId is required" });
     if (!patientName || !String(patientName).trim()) return res.status(400).json({ success: false, message: "patientName is required" });

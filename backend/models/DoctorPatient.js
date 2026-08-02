@@ -9,7 +9,8 @@ const doctorPatientSchema = new mongoose.Schema(
       index: true,
     },
     patientId: {
-      type: String, // Clerk ID or Mongoose User ID
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Patient",
       required: true,
       index: true,
     },
@@ -23,14 +24,14 @@ const doctorPatientSchema = new mongoose.Schema(
       ref: "Doctor",
       default: null,
     },
-    joinedDate: {
-      type: Date,
-      default: Date.now,
-    },
     status: {
       type: String,
       enum: ["Active", "Inactive"],
       default: "Active",
+    },
+    joinedDate: {
+      type: Date,
+      default: Date.now,
     },
   },
   {
@@ -38,7 +39,7 @@ const doctorPatientSchema = new mongoose.Schema(
   }
 );
 
-// Prevent duplicate doctor-patient mapping
+// Unique compound index to prevent duplicate doctor-patient mapping
 doctorPatientSchema.index({ doctorId: 1, patientId: 1 }, { unique: true });
 
 module.exports = mongoose.model("DoctorPatient", doctorPatientSchema);

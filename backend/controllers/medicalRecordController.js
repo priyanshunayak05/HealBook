@@ -3,6 +3,7 @@ const MedicalRecord = require("../models/MedicalRecord");
 const Appointment = require("../models/Appointment");
 const Doctor = require("../models/Doctor");
 const User = require("../models/User");
+const Patient = require("../models/Patient");
 const Referral = require("../models/Referral");
 const { logActivity } = require("../services/logService");
 
@@ -133,7 +134,13 @@ const getPatientMedicalHistory = async (req, res) => {
     const authClerkId = req.user?.clerkId || req.user?.id || String(req.user?._id || "");
     const authEmail = (req.user?.email || "").toLowerCase();
 
-    const patientId = req.params.patientId || authClerkId || authEmail;
+    let rawParam = req.params.patientId || authClerkId || authEmail;
+    if (rawParam.includes(":::")) {
+      rawParam = rawParam.split(":::")[0];
+    }
+
+    const patientId = String(rawParam);
+    console.log("History requested patientId:", patientId);
 
     // Authorization Rule Verification
     if (userRole === "patient" && req.params.patientId) {
@@ -143,12 +150,10 @@ const getPatientMedicalHistory = async (req, res) => {
         return res.status(403).json({ success: false, message: "Forbidden: Patients can only view their own medical history." });
       }
     } else if (userRole === "doctor" && patientId) {
-      // Doctor authorization verification
       const doctorId = req.user?._id;
-      // Doctor can view if they treated the patient or patient had appointments with them or referred to them
       const hasAppointment = await Appointment.exists({
         doctorId,
-        $or: [{ createdBy: patientId }, { userId: patientId }, { email: patientId.toLowerCase() }, { patientEmail: patientId.toLowerCase() }],
+        $or: [{ createdBy: patientId }, { userId: patientId }, { patientId: patientId }, { email: patientId.toLowerCase() }, { patientEmail: patientId.toLowerCase() }],
       });
 
       const hasReferral = await Referral.exists({
@@ -156,12 +161,12 @@ const getPatientMedicalHistory = async (req, res) => {
         $or: [{ toDoctorId: doctorId }, { fromDoctorId: doctorId }],
       });
 
-      // Allow doctor access
       if (!hasAppointment && !hasReferral) {
         console.log(`Doctor ${doctorId} accessing patient ${patientId} history (general clinical access permitted)`);
       }
     }
 
+    // Query MedicalRecord strictly by patientId (or matching patientEmail)
     const query = patientId
       ? {
           $or: [
@@ -188,8 +193,16 @@ const getPatientMedicalHistory = async (req, res) => {
       : {};
     const patientReferrals = await Referral.find(referralQuery).sort({ createdAt: -1 });
 
-    // Fetch user demographics
+    // Fetch user/patient demographics strictly by patientId
     const isObjId = mongoose.Types.ObjectId.isValid(patientId);
+    let patientDoc = null;
+    if (isObjId) {
+      patientDoc = await Patient.findById(patientId);
+    }
+    if (!patientDoc) {
+      patientDoc = await Patient.findOne({ $or: [{ clerkId: String(patientId) }, { email: String(patientId).toLowerCase() }] });
+    }
+
     const userQueries = [{ clerkId: String(patientId) }, { email: String(patientId).toLowerCase() }];
     if (isObjId) userQueries.push({ _id: patientId });
     const userDoc = await User.findOne({ $or: userQueries });
@@ -198,6 +211,7 @@ const getPatientMedicalHistory = async (req, res) => {
       $or: [
         { createdBy: String(patientId) },
         { userId: String(patientId) },
+        { patientId: String(patientId) },
         { email: String(patientId).toLowerCase() },
         { patientEmail: String(patientId).toLowerCase() },
       ],
@@ -207,14 +221,14 @@ const getPatientMedicalHistory = async (req, res) => {
 
     const patientDetails = {
       patientId: String(patientId),
-      name: userDoc?.name || latestRecord?.patientName || patientAppt?.patientName || "Patient",
-      email: userDoc?.email || latestRecord?.patientEmail || patientAppt?.email || "N/A",
-      phone: userDoc?.phone || patientAppt?.mobile || "N/A",
-      age: patientAppt?.age || "N/A",
-      gender: patientAppt?.gender || "N/A",
-      bloodGroup: userDoc?.bloodGroup || "O+",
-      address: userDoc?.address || "N/A",
-      emergencyContact: userDoc?.emergencyContact || userDoc?.phone || patientAppt?.mobile || "N/A",
+      name: patientDoc?.name || latestRecord?.patientName || patientAppt?.patientName || userDoc?.name || "Patient",
+      email: patientDoc?.email || userDoc?.email || latestRecord?.patientEmail || patientAppt?.email || "N/A",
+      phone: patientDoc?.phone || patientAppt?.mobile || userDoc?.phone || "N/A",
+      age: patientDoc?.age || patientAppt?.age || "N/A",
+      gender: patientDoc?.gender || patientAppt?.gender || "N/A",
+      bloodGroup: patientDoc?.bloodGroup || latestRecord?.bloodGroup || patientAppt?.bloodGroup || userDoc?.bloodGroup || "Not Specified",
+      address: patientDoc?.address || userDoc?.address || "N/A",
+      emergencyContact: patientDoc?.emergencyContact || userDoc?.emergencyContact || userDoc?.phone || patientAppt?.mobile || "N/A",
     };
 
     // Format output consultations

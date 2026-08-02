@@ -25,6 +25,30 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "patient",
     },
+    bloodGroup: {
+      type: String,
+      default: "",
+    },
+    gender: {
+      type: String,
+      default: "",
+    },
+    age: {
+      type: String,
+      default: "",
+    },
+    phone: {
+      type: String,
+      default: "",
+    },
+    address: {
+      type: String,
+      default: "",
+    },
+    emergencyContact: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,

@@ -59,6 +59,8 @@ app.use("/api", limiter);
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
+  "http://localhost:5175",
+  "http://localhost:3000",
   "https://heal-book-frontend.vercel.app",
   "https://heal-book-admin-zeta.vercel.app",
   process.env.FRONTEND_URL,
@@ -73,11 +75,13 @@ app.use(
         allowedOrigins.indexOf(origin) !== -1 ||
         origin.endsWith(".onrender.com") ||
         origin.endsWith(".vercel.app") ||
-        origin.endsWith(".netlify.app")
+        origin.endsWith(".netlify.app") ||
+        origin.endsWith(".clerk.accounts.dev") ||
+        origin.endsWith(".accounts.dev")
       ) {
-        return callback(null, true);
+        return callback(null, origin);
       }
-      return callback(null, true);
+      return callback(null, origin);
     },
     credentials: true,
   })

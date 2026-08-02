@@ -104,6 +104,7 @@ export default function DoctorDetail() {
     age: "",
     mobile: "",
     gender: "",
+    bloodGroup: "",
     email: "",
   });
 
@@ -292,6 +293,7 @@ export default function DoctorDetail() {
       mobile: mobileDigits,
       age: formData.age,
       gender: formData.gender,
+      bloodGroup: formData.bloodGroup || "",
       date: dateISO,
       time: selectedSlot,
       fee: fee,
@@ -612,12 +614,11 @@ export default function DoctorDetail() {
                   <div className={doctorDetailStyles.patientFormGrid}>
                     <input
                       type="text"
-                      placeholder="Full Name"
-                      className={doctorDetailStyles.formInput}
+                      placeholder="Account Name (Verified)"
+                      className={`${doctorDetailStyles.emailInput} bg-slate-100 text-slate-500 cursor-not-allowed opacity-90`}
                       value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
+                      readOnly
+                      disabled
                     />
 
                     <input
@@ -657,6 +658,24 @@ export default function DoctorDetail() {
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
                       <option value="Other">Other</option>
+                    </select>
+
+                    <select
+                      className={doctorDetailStyles.formSelect}
+                      value={formData.bloodGroup}
+                      onChange={(e) =>
+                        setFormData({ ...formData, bloodGroup: e.target.value })
+                      }
+                    >
+                      <option value="">Blood Group (Optional)</option>
+                      <option value="A+">A+</option>
+                      <option value="A-">A-</option>
+                      <option value="B+">B+</option>
+                      <option value="B-">B-</option>
+                      <option value="AB+">AB+</option>
+                      <option value="AB-">AB-</option>
+                      <option value="O+">O+</option>
+                      <option value="O-">O-</option>
                     </select>
 
                     <input

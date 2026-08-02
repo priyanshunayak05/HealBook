@@ -183,6 +183,7 @@ export default function PatientsPage() {
 
                   <Link
                     to={`../patient/${encodeURIComponent(patient.patientId)}`}
+                    onClick={() => console.log("Selected patient:", patient)}
                     className="flex-1 py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1 group"
                   >
                     <span>View History</span>

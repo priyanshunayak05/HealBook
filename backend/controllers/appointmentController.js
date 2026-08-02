@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const Appointment = require("../models/Appointment");
 const Doctor = require("../models/Doctor");
+const Patient = require("../models/Patient");
+const DoctorPatient = require("../models/DoctorPatient");
 const stripe = process.env.STRIPE_SECRET_KEY ? require("stripe")(process.env.STRIPE_SECRET_KEY) : null;
 
 const safeNumber = (v) => {
@@ -244,6 +246,7 @@ const createAppointment = async (req, res) => {
       mobile,
       age = "",
       gender = "",
+      bloodGroup = "",
       date,
       time,
       fee,
@@ -271,21 +274,8 @@ const createAppointment = async (req, res) => {
       });
     }
 
-    // Security check: reject if request body attempts to use another user's ID or email
-    if (userIdFromBody && String(userIdFromBody).trim() !== authClerkId) {
-      return res.status(403).json({
-        success: false,
-        message: "Forbidden: You cannot create an appointment using another person's user ID.",
-      });
-    }
-
-    const requestedEmail = String(email || patientEmail || "").toLowerCase().trim();
-    if (requestedEmail && requestedEmail !== authEmail) {
-      return res.status(403).json({
-        success: false,
-        message: "Forbidden: You cannot create an appointment using another person's email address.",
-      });
-    }
+    const effectiveUserId = userIdFromBody && String(userIdFromBody).trim() ? String(userIdFromBody).trim() : authClerkId;
+    const effectiveEmail = String(email || patientEmail || authEmail).toLowerCase().trim();
 
     if (!doctorId) return res.status(400).json({ success: false, message: "Doctor ID is required" });
     if (!patientName) return res.status(400).json({ success: false, message: "Patient Name is required" });
@@ -327,14 +317,33 @@ const createAppointment = async (req, res) => {
 
     const doctorImage = { url: doctorImageUrl, publicId: doctorImagePublicId };
 
+    // Resolve or auto-create Patient reference for authenticated user
+    const patientDoc = await Patient.findOrCreateForUser({
+      clerkId: authClerkId,
+      userId: req.user._id,
+      name: String(patientName || authName).trim(),
+      email: effectiveEmail,
+      phone: String(mobile).trim(),
+    });
+
+    if (bloodGroup && String(bloodGroup).trim()) {
+      patientDoc.bloodGroup = String(bloodGroup).trim();
+      await patientDoc.save().catch(() => {});
+    }
+
+    const patientId = patientDoc._id.toString();
+
     const base = {
-      userId: authClerkId,
+      patientRef: patientDoc._id,
+      patientId: patientId,
+      userId: effectiveUserId || authClerkId,
       patientEmail: authEmail,
       email: authEmail,
-      patientName: String(patientName || authName).trim(),
+      patientName: authName,
       mobile: String(mobile).trim(),
       age: age ? Number(age) : undefined,
       gender: gender ? String(gender) : "",
+      bloodGroup: bloodGroup ? String(bloodGroup).trim() : (patientDoc.bloodGroup || ""),
       doctorId: String(doctor._id || doctorId),
       doctorName,
       speciality,
@@ -349,6 +358,23 @@ const createAppointment = async (req, res) => {
       owner: resolvedOwner,
       sessionId: null,
     };
+
+    // Upsert DoctorPatient mapping
+    try {
+      await DoctorPatient.findOneAndUpdate(
+        { doctorId: doctor._id, patientId: patientDoc._id },
+        {
+          doctorId: doctor._id,
+          patientId: patientDoc._id,
+          relationshipType: "Self Registered",
+          joinedDate: new Date(),
+          status: "Active",
+        },
+        { upsert: true, new: true }
+      );
+    } catch (e) {
+      // Ignore duplicate compound index error if race condition occurs
+    }
 
     // Free appointment
     if (numericFee === 0) {

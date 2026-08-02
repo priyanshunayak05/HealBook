@@ -3,8 +3,13 @@ const mongoose = require("mongoose");
 const referralSchema = new mongoose.Schema(
   {
     patientId: {
-      type: String, // Clerk ID or Mongoose User ID
+      type: mongoose.Schema.Types.Mixed, // Patient ObjectId or Patient string ID
       required: true,
+      index: true,
+    },
+    patientRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Patient",
       index: true,
     },
     patientName: { type: String, default: "", trim: true },
@@ -35,6 +40,8 @@ const referralSchema = new mongoose.Schema(
       index: true,
     },
     acceptedAt: { type: Date, default: null },
+    rejectedAt: { type: Date, default: null },
+    rejectionReason: { type: String, default: "", trim: true },
   },
   {
     timestamps: true,

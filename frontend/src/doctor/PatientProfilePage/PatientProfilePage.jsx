@@ -50,6 +50,8 @@ export default function PatientProfilePage() {
     const token = localStorage.getItem("doctorToken_v1");
     if (!token) return;
 
+    console.log("History requested patientId:", patientId);
+
     if (targetPage === 1) setLoading(true);
     else setLoadingMore(true);
 
@@ -79,7 +81,7 @@ export default function PatientProfilePage() {
             phone: latest.mobile || prev?.phone || "N/A",
             gender: latest.gender || prev?.gender || "N/A",
             age: latest.age || prev?.age || "N/A",
-            bloodGroup: prev?.bloodGroup || "O+",
+            bloodGroup: prev?.bloodGroup || "Not Specified",
             address: prev?.address || "N/A",
             emergencyContact: prev?.emergencyContact || "N/A",
           }));
@@ -136,7 +138,7 @@ export default function PatientProfilePage() {
                 phone: prev?.phone && prev?.phone !== "N/A" ? prev.phone : match.mobile || "N/A",
                 gender: prev?.gender && prev?.gender !== "N/A" ? prev.gender : match.gender || "N/A",
                 age: prev?.age && prev?.age !== "N/A" ? prev.age : match.age || "N/A",
-                bloodGroup: prev?.bloodGroup || "O+",
+                bloodGroup: prev?.bloodGroup || "Not Specified",
                 address: prev?.address || "N/A",
                 emergencyContact: prev?.emergencyContact || match.mobile || "N/A",
               }));
@@ -187,7 +189,7 @@ export default function PatientProfilePage() {
                 </span>
                 <span className="flex items-center gap-1 text-rose-600 font-semibold">
                   <Droplet size={14} />
-                  Blood Group: {patientDetails?.bloodGroup || "O+"}
+                  Blood Group: {patientDetails?.bloodGroup || "Not Specified"}
                 </span>
                 <span className="flex items-center gap-1">
                   <Mail size={14} className="text-slate-400" />

@@ -3,9 +3,13 @@ const mongoose = require("mongoose");
 const notificationSchema = new mongoose.Schema(
   {
     recipientId: {
-      type: String, // Clerk ID, Doctor ID, or "admin" (broadcast to all admins)
+      type: String, // Clerk ID, Doctor ID, or User ID
       required: true,
       index: true,
+    },
+    senderId: {
+      type: String,
+      default: null,
     },
     title: {
       type: String,
@@ -17,8 +21,13 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["info", "warning", "success", "danger"],
-      default: "info",
+      enum: ["referral", "appointment", "system", "info", "warning", "success", "danger"],
+      default: "system",
+      required: true,
+    },
+    referenceId: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
     },
     isRead: {
       type: Boolean,

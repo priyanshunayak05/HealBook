@@ -2,6 +2,16 @@ const mongoose = require("mongoose");
 
 const appointmentSchema = new mongoose.Schema(
   {
+    patientRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Patient",
+      index: true,
+    },
+    patientId: {
+      type: mongoose.Schema.Types.Mixed, // Patient._id or Clerk ID string
+      required: true,
+      index: true,
+    },
     userId: { type: String, index: true },
     patientEmail: { type: String, lowercase: true, trim: true, index: true },
     email: { type: String, lowercase: true, trim: true, index: true },
@@ -9,6 +19,7 @@ const appointmentSchema = new mongoose.Schema(
     mobile: { type: String, required: true, trim: true },
     age: { type: Number, default: null, min: [0, "Age cannot be negative"] },
     gender: { type: String, default: "" },
+    bloodGroup: { type: String, default: "" },
     doctorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Doctor",

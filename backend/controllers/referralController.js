@@ -2,8 +2,10 @@ const mongoose = require("mongoose");
 const Referral = require("../models/Referral");
 const Doctor = require("../models/Doctor");
 const User = require("../models/User");
+const Patient = require("../models/Patient");
 const Appointment = require("../models/Appointment");
 const DoctorPatient = require("../models/DoctorPatient");
+const Notification = require("../models/Notification");
 const { logActivity } = require("../services/logService");
 
 // @desc    Create new doctor referral
@@ -259,6 +261,9 @@ const getIncomingReferrals = async (req, res) => {
 // @desc    Accept referral & automatically map patient to receiving doctor
 // @route   PUT /api/referrals/:id/accept
 // @access  Private/Doctor
+// @desc    Accept referral
+// @route   PUT /api/referrals/:id/accept
+// @access  Private/Doctor
 const acceptReferral = async (req, res) => {
   try {
     const { id } = req.params;
@@ -271,36 +276,47 @@ const acceptReferral = async (req, res) => {
       return res.status(404).json({ success: false, message: "Referral not found" });
     }
 
+    if (referral.status === "accepted") {
+      return res.status(400).json({ success: false, message: "Referral has already been accepted" });
+    }
+
     referral.status = "accepted";
     referral.acceptedAt = new Date();
     await referral.save();
 
-    // Automatically add patient into Doctor B's patient list via DoctorPatient mapping
-    await DoctorPatient.findOneAndUpdate(
-      { doctorId: referral.toDoctorId, patientId: String(referral.patientId) },
-      {
-        doctorId: referral.toDoctorId,
-        patientId: String(referral.patientId),
-        relationshipType: "Referral",
-        referredByDoctorId: referral.fromDoctorId,
-        joinedDate: new Date(),
-        status: "Active",
-      },
-      { upsert: true, new: true }
-    );
+    // Create DoctorPatient mapping for receiving doctor
+    try {
+      await DoctorPatient.findOneAndUpdate(
+        { doctorId: referral.toDoctorId, patientId: referral.patientId },
+        {
+          doctorId: referral.toDoctorId,
+          patientId: referral.patientId,
+          relationshipType: "Referral",
+          referredByDoctorId: referral.fromDoctorId,
+          status: "Active",
+          joinedDate: new Date(),
+        },
+        { upsert: true, new: true }
+      );
+    } catch (e) {
+      console.warn("DoctorPatient upsert failed:", e?.message);
+    }
 
-    // Also map to referring doctor as Self Registered / Original Doctor if not already present
-    await DoctorPatient.findOneAndUpdate(
-      { doctorId: referral.fromDoctorId, patientId: String(referral.patientId) },
-      {
-        doctorId: referral.fromDoctorId,
-        patientId: String(referral.patientId),
-        relationshipType: "Self Registered",
-        joinedDate: new Date(),
-        status: "Active",
-      },
-      { upsert: true, new: true }
-    );
+    // Send Notification to referring doctor
+    try {
+      const receivingDocName = referral.toDoctorName || "Doctor";
+      const patientName = referral.patientName || "Patient";
+      await Notification.create({
+        recipientId: String(referral.fromDoctorId),
+        senderId: String(referral.toDoctorId),
+        type: "referral",
+        title: "Referral Accepted",
+        message: `Dr. ${receivingDocName} has accepted the referral for patient ${patientName}.`,
+        referenceId: referral._id,
+      });
+    } catch (e) {
+      console.warn("Notification creation failed:", e?.message);
+    }
 
     try {
       await logActivity(
@@ -317,7 +333,7 @@ const acceptReferral = async (req, res) => {
 
     return res.json({
       success: true,
-      message: `Referral accepted! ${referral.patientName} added to your patient list.`,
+      message: `Referral accepted! ${referral.patientName || "Patient"} added to your patient list.`,
       data: referral,
       referral,
     });
@@ -333,6 +349,8 @@ const acceptReferral = async (req, res) => {
 const rejectReferral = async (req, res) => {
   try {
     const { id } = req.params;
+    const { rejectionReason = "" } = req.body || {};
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, message: "Invalid referral ID format" });
     }
@@ -342,12 +360,36 @@ const rejectReferral = async (req, res) => {
       return res.status(404).json({ success: false, message: "Referral not found" });
     }
 
+    if (referral.status === "rejected") {
+      return res.status(400).json({ success: false, message: "Referral has already been rejected" });
+    }
+
+    const cleanReason = String(rejectionReason).trim();
     referral.status = "rejected";
+    referral.rejectionReason = cleanReason;
+    referral.rejectedAt = new Date();
     await referral.save();
+
+    // Send Notification to referring doctor
+    try {
+      const receivingDocName = referral.toDoctorName || "Doctor";
+      const patientName = referral.patientName || "Patient";
+      const reasonText = cleanReason ? ` Reason: ${cleanReason}` : "";
+      await Notification.create({
+        recipientId: String(referral.fromDoctorId),
+        senderId: String(referral.toDoctorId),
+        type: "referral",
+        title: "Referral Rejected",
+        message: `Dr. ${receivingDocName} rejected the referral for ${patientName}.${reasonText}`,
+        referenceId: referral._id,
+      });
+    } catch (e) {
+      console.warn("Notification creation failed:", e?.message);
+    }
 
     return res.json({
       success: true,
-      message: `Referral rejected`,
+      message: `Referral rejected successfully`,
       data: referral,
       referral,
     });
