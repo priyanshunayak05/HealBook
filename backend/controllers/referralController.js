@@ -105,10 +105,32 @@ const createReferral = async (req, res) => {
       }
     }
 
+    // Resolve Patient document
+    let patientDoc = null;
+    if (isPatientObjectId) {
+      patientDoc = await Patient.findById(patientId);
+    }
+    if (!patientDoc) {
+      patientDoc = await Patient.findOne({
+        $or: [
+          { clerkId: String(patientId) },
+          { email: patientEmail ? patientEmail.toLowerCase() : String(patientId).toLowerCase() },
+        ],
+      });
+    }
+    if (!patientDoc && (patientName || patientEmail)) {
+      patientDoc = await Patient.findOrCreateForUser({
+        clerkId: String(patientId),
+        name: patientName,
+        email: patientEmail,
+      });
+    }
+
     const referral = await Referral.create({
       patientId: String(patientId),
-      patientName: patientName || "Patient",
-      patientEmail: patientEmail || "",
+      patientRef: patientDoc ? patientDoc._id : (isPatientObjectId ? new mongoose.Types.ObjectId(patientId) : undefined),
+      patientName: patientName || patientDoc?.name || "Patient",
+      patientEmail: patientEmail || patientDoc?.email || "",
       fromDoctorId: fromDoctor._id,
       fromDoctorName: fromDoctor.name || "Doctor",
       toDoctorId: toDoctor._id,
@@ -284,20 +306,35 @@ const acceptReferral = async (req, res) => {
     referral.acceptedAt = new Date();
     await referral.save();
 
-    // Create DoctorPatient mapping for receiving doctor
+    // Create DoctorPatient mapping for receiving doctor safely
     try {
-      await DoctorPatient.findOneAndUpdate(
-        { doctorId: referral.toDoctorId, patientId: referral.patientId },
-        {
-          doctorId: referral.toDoctorId,
-          patientId: referral.patientId,
-          relationshipType: "Referral",
-          referredByDoctorId: referral.fromDoctorId,
-          status: "Active",
-          joinedDate: new Date(),
-        },
-        { upsert: true, new: true }
-      );
+      let pObjId = referral.patientRef;
+      if (!pObjId && mongoose.Types.ObjectId.isValid(referral.patientId)) {
+        pObjId = new mongoose.Types.ObjectId(referral.patientId);
+      }
+      if (!pObjId) {
+        const pDoc = await Patient.findOrCreateForUser({
+          clerkId: String(referral.patientId),
+          name: referral.patientName,
+          email: referral.patientEmail,
+        });
+        if (pDoc) pObjId = pDoc._id;
+      }
+
+      if (pObjId) {
+        await DoctorPatient.findOneAndUpdate(
+          { doctorId: referral.toDoctorId, patientId: pObjId },
+          {
+            doctorId: referral.toDoctorId,
+            patientId: pObjId,
+            relationshipType: "Referral",
+            referredByDoctorId: referral.fromDoctorId,
+            status: "Active",
+            joinedDate: new Date(),
+          },
+          { upsert: true, new: true }
+        );
+      }
     } catch (e) {
       console.warn("DoctorPatient upsert failed:", e?.message);
     }

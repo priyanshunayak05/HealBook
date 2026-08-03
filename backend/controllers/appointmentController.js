@@ -328,14 +328,14 @@ const createAppointment = async (req, res) => {
 
     if (bloodGroup && String(bloodGroup).trim()) {
       patientDoc.bloodGroup = String(bloodGroup).trim();
-      await patientDoc.save().catch(() => {});
+      await patientDoc.save().catch(() => { });
     }
 
-    const patientId = patientDoc._id.toString();
+    const patientId = patientDoc._id;
 
     const base = {
       patientRef: patientDoc._id,
-      patientId: patientId,
+      patientId: patientDoc._id,
       userId: effectiveUserId || authClerkId,
       patientEmail: authEmail,
       email: authEmail,
@@ -484,11 +484,25 @@ const confirmPayment = async (req, res) => {
       const meta = session.metadata || {};
       if (meta.doctorId && meta.mobile && meta.patientName && meta.date && meta.time) {
         const numericFee = safeNumber(meta.fees || (session.amount_total ? session.amount_total / 100 : 0));
+        const patientDoc = await Patient.findOne({
+          email: meta.email
+        });
+
+
         appt = await Appointment.create({
+
+          patientRef: patientDoc?._id,
+          patientId: patientDoc?._id,
+
           doctorId: meta.doctorId,
           doctorName: meta.doctorName || "",
           speciality: meta.speciality || "",
-          doctorImage: { url: meta.doctorImageUrl || "", publicId: meta.doctorImagePublicId || "" },
+
+          doctorImage: {
+            url: meta.doctorImageUrl || "",
+            publicId: meta.doctorImagePublicId || ""
+          },
+
           patientName: meta.patientName,
           mobile: meta.mobile,
           age: meta.age ? Number(meta.age) : undefined,

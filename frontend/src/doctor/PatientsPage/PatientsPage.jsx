@@ -109,7 +109,15 @@ export default function PatientsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((patient) => {
-            const isReferral = (patient.referralSource || "").toLowerCase().includes("referral");
+            const isReferral =
+              patient.source === "Referred Patient" ||
+              (patient.referralSource || "").toLowerCase().includes("referral") ||
+              !!patient.referredBy;
+
+            const sourceDisplay =
+              patient.source === "Referred Patient" && patient.referredBy?.doctorName
+                ? `Referred by Dr. ${patient.referredBy.doctorName}`
+                : patient.referralSource || patient.source || "Direct Appointment";
 
             return (
               <div
@@ -162,7 +170,7 @@ export default function PatientsPage() {
                             : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                         }`}
                       >
-                        {patient.referralSource || "Self Registered"}
+                        {sourceDisplay}
                       </span>
                     </div>
                   </div>
@@ -183,6 +191,7 @@ export default function PatientsPage() {
 
                   <Link
                     to={`../patient/${encodeURIComponent(patient.patientId)}`}
+                    state={{ patient }}
                     onClick={() => console.log("Selected patient:", patient)}
                     className="flex-1 py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1 group"
                   >

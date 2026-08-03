@@ -230,7 +230,7 @@ const updateDoctorAppointment = async (req, res) => {
   }
 };
 
-// @desc    Get doctor's assigned & referred patients with consultation counts & referral sources
+// @desc    Get doctor's assigned & referred patients with consultation counts, referral sources, and appointment history
 // @route   GET /api/doctor/patients
 // @access  Private/Doctor
 const getDoctorPatients = async (req, res) => {
@@ -285,144 +285,227 @@ const getDoctorPatients = async (req, res) => {
       .populate("referredByDoctorId", "name specialization")
       .sort({ joinedDate: -1 });
 
-    // 2. Find all appointments for this doctor
-    const appointments = await Appointment.find({ $or: doctorQueryOr }).sort({ createdAt: -1 });
-
-    // 3. Find all accepted referrals to this doctor
+    // 2. Find all referrals targeting this doctor
     const referralQueryOr = [
       { toDoctorId: { $in: [...idsToMatch, ...validObjectIds] } },
     ];
-    const acceptedReferrals = await Referral.find({
+    const doctorReferrals = await Referral.find({
       $or: referralQueryOr,
-      status: "accepted",
-    }).populate("fromDoctorId", "name specialization").sort({ updatedAt: -1 });
+      status: { $in: ["accepted", "pending", "completed"] },
+    })
+      .populate("fromDoctorId", "name specialization")
+      .populate("patientRef")
+      .sort({ updatedAt: -1 });
 
-    // Map unique patient entries (keyed strictly by patientId)
+    // 3. Find all direct appointments for this doctor
+    const doctorAppointments = await Appointment.find({ $or: doctorQueryOr }).sort({ createdAt: -1 });
+
+    // Map to track unique canonical patients
     const patientMap = new Map();
+    const aliasToKeyMap = new Map();
 
-    // 1. Process DoctorPatient mappings
-    for (const mapping of dpMappings) {
-      const pDoc = mapping.patientId;
-      let pId = pDoc ? String(pDoc._id || pDoc) : String(mapping.patientId || "");
-      if (!pId) continue;
-      if (pId.includes(":::")) pId = pId.split(":::")[0];
-
-      let refSource = "Self Registered";
-      if (mapping.relationshipType === "Referral") {
-        const refDocName = mapping.referredByDoctorId?.name || "another doctor";
-        refSource = `Referral from Dr. ${refDocName}`;
-      } else if (mapping.relationshipType) {
-        refSource = mapping.relationshipType;
+    const getOrInitEntry = (key, initialData = {}) => {
+      if (!patientMap.has(key)) {
+        patientMap.set(key, {
+          patientId: key,
+          patientDoc: initialData.patientDoc || null,
+          name: initialData.name || "",
+          email: initialData.email || "",
+          phone: initialData.phone || "",
+          source: initialData.source || "Direct Appointment",
+          referralSource: initialData.referralSource || "Direct Appointment",
+          referredBy: initialData.referredBy || null,
+          joinedDate: initialData.joinedDate || new Date(),
+        });
       }
+      return patientMap.get(key);
+    };
 
-      patientMap.set(pId, {
-        patientId: pId,
+    // 1. Process DoctorPatient entries
+    for (const dp of dpMappings) {
+      const pDoc = dp.patientId;
+      if (!pDoc) continue;
+      const canonicalKey = pDoc._id ? pDoc._id.toString() : String(pDoc);
+
+      const isRef = dp.relationshipType === "Referral" || !!dp.referredByDoctorId;
+      const refDoc = dp.referredByDoctorId;
+      const refDocName = refDoc?.name || "another doctor";
+      const source = isRef ? "Referred Patient" : "Direct Appointment";
+      const referralSource = isRef ? `Referred by Dr. ${refDocName}` : "Direct Appointment";
+      const referredBy = isRef && refDoc ? { doctorId: refDoc._id?.toString() || refDoc, doctorName: refDoc.name || "Doctor" } : null;
+
+      getOrInitEntry(canonicalKey, {
         patientDoc: typeof pDoc === "object" ? pDoc : null,
-        relationshipType: mapping.relationshipType || "Self Registered",
-        referralSource: refSource,
-        referredByDoctor: mapping.referredByDoctorId || null,
-        joinedDate: mapping.joinedDate || mapping.createdAt,
+        name: pDoc.name,
+        email: pDoc.email,
+        phone: pDoc.phone,
+        source,
+        referralSource,
+        referredBy,
+        joinedDate: dp.joinedDate || dp.createdAt,
       });
+
+      if (pDoc._id) aliasToKeyMap.set(pDoc._id.toString(), canonicalKey);
+      if (pDoc.clerkId) aliasToKeyMap.set(String(pDoc.clerkId), canonicalKey);
+      if (pDoc.email) aliasToKeyMap.set(pDoc.email.toLowerCase(), canonicalKey);
     }
 
-    // 2. Process accepted Referrals
-    for (const ref of acceptedReferrals) {
-      let pId = String(ref.patientId || ref.patientRef || "");
-      if (!pId) continue;
-      if (pId.includes(":::")) pId = pId.split(":::")[0];
-
-      if (!patientMap.has(pId)) {
-        const refDocName = ref.fromDoctorId?.name || "another doctor";
-        const refSource = `Referral from Dr. ${refDocName}`;
-
-        patientMap.set(pId, {
-          patientId: pId,
-          patientDoc: null,
-          relationshipType: "Referral",
-          referralSource: refSource,
-          referredByDoctor: ref.fromDoctorId || null,
-          joinedDate: ref.acceptedAt || ref.createdAt,
-        });
-      }
-    }
-
-    // 3. Process appointments to include all consultation patients
-    for (const appt of appointments) {
-      let pId = String(appt.patientId || appt.patientRef || appt.userId || appt.createdBy || "");
-      if (!pId) continue;
-      if (pId.includes(":::")) pId = pId.split(":::")[0];
-
-      if (!patientMap.has(pId)) {
-        patientMap.set(pId, {
-          patientId: pId,
-          patientDoc: null,
-          relationshipType: "Self Registered",
-          referralSource: "Self Registered",
-          referredByDoctor: null,
-          joinedDate: appt.createdAt || appt.date,
-        });
-      }
-    }
-
-    // 3. Populate demographics, consultation count, last visit date for each patientId
-    const resultList = [];
-
-    for (const [pId, baseInfo] of patientMap.entries()) {
-      const isObjId = mongoose.Types.ObjectId.isValid(pId);
-      const userQueries = [{ clerkId: pId }, { email: pId.toLowerCase() }];
-      if (isObjId) userQueries.push({ _id: pId });
-
-      let patientDoc = null;
-      if (isObjId) {
-        patientDoc = await Patient.findById(pId);
-      }
-      if (!patientDoc) {
-        patientDoc = await Patient.findOne({ $or: [{ clerkId: pId }, { email: pId.toLowerCase() }] });
-      }
-
-      const userDoc = await User.findOne({ $or: userQueries });
-
-      const matchingAppts = appointments.filter(
-        (a) =>
-          String(a.createdBy) === pId ||
-          String(a.userId) === pId ||
-          String(a.patientId) === pId ||
-          String(a._id) === pId ||
-          (a.email && a.email.toLowerCase() === pId.toLowerCase())
+    // 2. Process Doctor Referrals
+    for (const ref of doctorReferrals) {
+      const pRef = ref.patientRef;
+      const pIdRaw = String(
+        pRef?._id ||
+        ref.patientId ||
+        ""
       );
+      const pEmail = (ref.patientEmail || pRef?.email || "").toLowerCase();
 
-      const patientAppt = matchingAppts[0];
+      let canonicalKey = (pRef && pRef._id) ? pRef._id.toString() : (aliasToKeyMap.get(pIdRaw) || aliasToKeyMap.get(pEmail) || pIdRaw);
+      if (!canonicalKey) continue;
 
-      const medRecordQuery = {
-        $or: [{ patientId: pId }, { patientEmail: pId.toLowerCase() }],
+      const refDoc = ref.fromDoctorId;
+      const refDocName = ref.fromDoctorName || refDoc?.name || "another doctor";
+      const source = "Referred Patient";
+      const referralSource = `Referred by Dr. ${refDocName}`;
+      const referredBy = {
+        doctorId: refDoc?._id?.toString() || (ref.fromDoctorId ? String(ref.fromDoctorId) : ""),
+        doctorName: refDocName,
       };
 
+      const entry = getOrInitEntry(canonicalKey, {
+        patientDoc: typeof pRef === "object" ? pRef : null,
+        name: ref.patientName || pRef?.name,
+        email: pEmail,
+        source,
+        referralSource,
+        referredBy,
+        joinedDate: ref.acceptedAt || ref.createdAt,
+      });
+
+      // Update referral source info
+      entry.source = "Referred Patient";
+      entry.referralSource = referralSource;
+      entry.referredBy = referredBy;
+
+      if (canonicalKey) aliasToKeyMap.set(canonicalKey, canonicalKey);
+      if (pIdRaw) aliasToKeyMap.set(pIdRaw, canonicalKey);
+      if (pEmail) aliasToKeyMap.set(pEmail, canonicalKey);
+    }
+
+    // 3. Process Doctor Direct Appointments
+    for (const appt of doctorAppointments) {
+      const pIdRaw = String(appt.patientRef || appt.patientId || appt.createdBy || appt.userId || "");
+      const pEmail = (appt.email || appt.patientEmail || "").toLowerCase();
+
+      let canonicalKey = aliasToKeyMap.get(pIdRaw) || aliasToKeyMap.get(pEmail) || pIdRaw;
+      if (!canonicalKey) continue;
+
+      getOrInitEntry(canonicalKey, {
+        name: appt.patientName,
+        email: pEmail,
+        phone: appt.mobile,
+        source: "Direct Appointment",
+        referralSource: "Direct Appointment",
+        joinedDate: appt.createdAt || appt.date,
+      });
+
+      if (pIdRaw) aliasToKeyMap.set(pIdRaw, canonicalKey);
+      if (pEmail) aliasToKeyMap.set(pEmail, canonicalKey);
+    }
+
+    // Format output array
+    const resultList = [];
+
+    for (const [canonicalKey, baseInfo] of patientMap.entries()) {
+      const isObjId = mongoose.Types.ObjectId.isValid(canonicalKey);
+      let patientDoc = baseInfo.patientDoc;
+      if (!patientDoc && isObjId) {
+        patientDoc = await Patient.findById(canonicalKey);
+      }
+      if (!patientDoc) {
+        patientDoc = await Patient.findOne({
+          $or: [
+            { clerkId: canonicalKey },
+            { email: baseInfo.email || canonicalKey.toLowerCase() },
+          ],
+        });
+      }
+
+      const aliases = new Set(
+        [
+          canonicalKey,
+          baseInfo.email ? baseInfo.email.toLowerCase() : null,
+          patientDoc?._id ? patientDoc._id.toString() : null,
+          patientDoc?.clerkId ? String(patientDoc.clerkId) : null,
+          patientDoc?.email ? patientDoc.email.toLowerCase() : null,
+        ].filter(Boolean)
+      );
+
+      const aliasArray = Array.from(aliases);
+      const aliasObjectIds = aliasArray
+        .filter((id) => mongoose.Types.ObjectId.isValid(id))
+        .map((id) => new mongoose.Types.ObjectId(id));
+
+      // Fetch all appointments for this patient
+      const allPatientAppts = await Appointment.find({
+        $or: [
+          { patientRef: { $in: aliasObjectIds } },
+          { patientId: { $in: aliasObjectIds } },
+          { createdBy: { $in: aliasArray } },
+          { userId: { $in: aliasArray } },
+          { email: { $in: aliasArray } },
+          { patientEmail: { $in: aliasArray } },
+        ],
+      }).sort({ date: -1, createdAt: -1 });
+
+      const latestAppt = allPatientAppts[0];
+
+      const formattedAppts = allPatientAppts.map((a) => ({
+        appointmentId: a._id.toString(),
+        date: a.date || (a.createdAt ? new Date(a.createdAt).toISOString().split("T")[0] : ""),
+        status: a.status || "Confirmed",
+        reason: a.reason || a.notes || a.speciality || "Consultation",
+        doctorName: a.doctorName || "",
+      }));
+
+      const medRecordQuery = {
+        $or: [
+          { patientId: { $in: aliasArray } },
+          { patientEmail: { $in: aliasArray } },
+        ],
+      };
       const latestRecord = await MedicalRecord.findOne(medRecordQuery).sort({ createdAt: -1 });
-
       const medRecordCount = await MedicalRecord.countDocuments(medRecordQuery);
-      const apptCount = matchingAppts.length;
-      const consultationCount = Math.max(medRecordCount, apptCount, 1);
 
-      const name = patientDoc?.name || latestRecord?.patientName || patientAppt?.patientName || userDoc?.name || "Patient";
-      const email = patientDoc?.email || userDoc?.email || latestRecord?.patientEmail || patientAppt?.email || "N/A";
-      const phone = patientDoc?.phone || patientAppt?.mobile || userDoc?.phone || "N/A";
-      const age = patientDoc?.age || patientAppt?.age || "N/A";
-      const gender = patientDoc?.gender || patientAppt?.gender || "N/A";
-      const bloodGroup = patientDoc?.bloodGroup || latestRecord?.bloodGroup || patientAppt?.bloodGroup || userDoc?.bloodGroup || "Not Specified";
+      const userDoc = await User.findOne({
+        $or: [
+          { clerkId: { $in: aliasArray } },
+          { email: { $in: aliasArray } },
+          ...aliasObjectIds.map((id) => ({ _id: id })),
+        ],
+      });
+
+      const name = patientDoc?.name || baseInfo.name || latestRecord?.patientName || latestAppt?.patientName || userDoc?.name || "Patient";
+      const email = patientDoc?.email || baseInfo.email || userDoc?.email || latestRecord?.patientEmail || latestAppt?.email || "N/A";
+      const phone = patientDoc?.phone || baseInfo.phone || latestAppt?.mobile || userDoc?.phone || "N/A";
+      const age = patientDoc?.age || latestAppt?.age || "N/A";
+      const gender = patientDoc?.gender || latestAppt?.gender || "N/A";
+      const bloodGroup = patientDoc?.bloodGroup || latestRecord?.bloodGroup || latestAppt?.bloodGroup || userDoc?.bloodGroup || "Not Specified";
 
       let lastVisit = "N/A";
-      if (latestRecord?.createdAt) {
+      if (latestAppt?.date) {
+        lastVisit = latestAppt.date;
+      } else if (latestRecord?.createdAt) {
         lastVisit = new Date(latestRecord.createdAt).toLocaleDateString("en-GB", {
           day: "numeric",
           month: "short",
           year: "numeric",
         });
-      } else if (patientAppt?.date) {
-        lastVisit = patientAppt.date;
       }
 
       resultList.push({
-        patientId: pId,
+        patientId: canonicalKey,
+        patientName: name,
         name,
         email,
         phone,
@@ -430,14 +513,15 @@ const getDoctorPatients = async (req, res) => {
         gender,
         bloodGroup,
         lastVisit,
-        consultationCount,
+        consultationCount: Math.max(medRecordCount, formattedAppts.length, 1),
+        source: baseInfo.source,
         referralSource: baseInfo.referralSource,
-        relationshipType: baseInfo.relationshipType,
+        referredBy: baseInfo.referredBy,
+        appointments: formattedAppts,
+        relationshipType: baseInfo.source === "Referred Patient" ? "Referral" : "Self Registered",
         joinedDate: baseInfo.joinedDate,
       });
     }
-
-    console.log("Doctor patients:", resultList);
 
     return res.json({
       success: true,

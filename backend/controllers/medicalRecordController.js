@@ -151,9 +151,20 @@ const getPatientMedicalHistory = async (req, res) => {
       }
     } else if (userRole === "doctor" && patientId) {
       const doctorId = req.user?._id;
+      const isObjIdParam = mongoose.Types.ObjectId.isValid(patientId);
+      const apptCheckOr = [
+        { createdBy: patientId },
+        { userId: patientId },
+        { email: patientId.toLowerCase() },
+        { patientEmail: patientId.toLowerCase() },
+      ];
+      if (isObjIdParam) {
+        const objIdVal = new mongoose.Types.ObjectId(patientId);
+        apptCheckOr.push({ patientId: objIdVal }, { patientRef: objIdVal });
+      }
       const hasAppointment = await Appointment.exists({
         doctorId,
-        $or: [{ createdBy: patientId }, { userId: patientId }, { patientId: patientId }, { email: patientId.toLowerCase() }, { patientEmail: patientId.toLowerCase() }],
+        $or: apptCheckOr,
       });
 
       const hasReferral = await Referral.exists({
@@ -167,33 +178,6 @@ const getPatientMedicalHistory = async (req, res) => {
     }
 
     // Query MedicalRecord strictly by patientId (or matching patientEmail)
-    const query = patientId
-      ? {
-          $or: [
-            { patientId: String(patientId) },
-            { patientEmail: String(patientId).toLowerCase() },
-          ],
-        }
-      : {};
-
-    const total = await MedicalRecord.countDocuments(query);
-    const records = await MedicalRecord.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    // Fetch patient referrals timeline
-    const referralQuery = patientId
-      ? {
-          $or: [
-            { patientId: String(patientId) },
-            { patientEmail: String(patientId).toLowerCase() },
-          ],
-        }
-      : {};
-    const patientReferrals = await Referral.find(referralQuery).sort({ createdAt: -1 });
-
-    // Fetch user/patient demographics strictly by patientId
     const isObjId = mongoose.Types.ObjectId.isValid(patientId);
     let patientDoc = null;
     if (isObjId) {
@@ -207,13 +191,54 @@ const getPatientMedicalHistory = async (req, res) => {
     if (isObjId) userQueries.push({ _id: patientId });
     const userDoc = await User.findOne({ $or: userQueries });
 
+    const aliases = new Set(
+      [
+        String(patientId),
+        patientDoc?._id ? String(patientDoc._id) : null,
+        patientDoc?.clerkId ? String(patientDoc.clerkId) : null,
+        patientDoc?.email ? patientDoc.email.toLowerCase() : null,
+        userDoc?.clerkId ? String(userDoc.clerkId) : null,
+        userDoc?.email ? userDoc.email.toLowerCase() : null,
+      ].filter(Boolean)
+    );
+
+    const aliasArray = Array.from(aliases);
+    const aliasObjectIds = aliasArray
+      .filter((id) => mongoose.Types.ObjectId.isValid(id))
+      .map((id) => new mongoose.Types.ObjectId(id));
+
+    // Query MedicalRecord by all patient aliases
+    const query = {
+      $or: [
+        { patientId: { $in: [...aliasArray, ...aliasObjectIds] } },
+        { patientEmail: { $in: aliasArray } },
+      ],
+    };
+
+    const total = await MedicalRecord.countDocuments(query);
+    const records = await MedicalRecord.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    // Fetch patient referrals timeline by all patient aliases
+    const referralQuery = {
+      $or: [
+        { patientId: { $in: aliasArray } },
+        { patientEmail: { $in: aliasArray } },
+        { patientRef: { $in: aliasObjectIds } },
+      ],
+    };
+    const patientReferrals = await Referral.find(referralQuery).sort({ createdAt: -1 });
+
     const patientAppt = await Appointment.findOne({
       $or: [
-        { createdBy: String(patientId) },
-        { userId: String(patientId) },
-        { patientId: String(patientId) },
-        { email: String(patientId).toLowerCase() },
-        { patientEmail: String(patientId).toLowerCase() },
+        { patientRef: { $in: aliasObjectIds } },
+        { patientId: { $in: aliasObjectIds } },
+        { createdBy: { $in: aliasArray } },
+        { userId: { $in: aliasArray } },
+        { email: { $in: aliasArray } },
+        { patientEmail: { $in: aliasArray } },
       ],
     }).sort({ createdAt: -1 });
 

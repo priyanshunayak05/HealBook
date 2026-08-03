@@ -63,40 +63,95 @@ const patientSchema = new mongoose.Schema(
 );
 
 // Helper static method: Find or create Patient for a specific name and user account
-patientSchema.statics.findOrCreateForUser = async function ({ clerkId, userId, name, email, phone }) {
-  const patientName = String(name || "Patient").trim();
-  const userQueries = [];
-  if (clerkId) userQueries.push({ clerkId: String(clerkId) });
-  if (userId && mongoose.Types.ObjectId.isValid(userId)) userQueries.push({ userId: new mongoose.Types.ObjectId(userId) });
-  if (email) userQueries.push({ email: String(email).toLowerCase() });
+// patientSchema.statics.findOrCreateForUser = async function ({ clerkId, userId, name, email, phone }) {
+//   const patientName = String(name || "Patient").trim();
+//   const userQueries = [];
+//   if (clerkId) userQueries.push({ clerkId: String(clerkId) });
+//   if (userId && mongoose.Types.ObjectId.isValid(userId)) userQueries.push({ userId: new mongoose.Types.ObjectId(userId) });
+//   if (email) userQueries.push({ email: String(email).toLowerCase() });
+
+//   let patient = null;
+//   if (userQueries.length > 0 && patientName) {
+//     patient = await this.findOne({
+//       name: new RegExp(`^${patientName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
+//       $or: userQueries,
+//     });
+//   }
+
+//   if (!patient && userQueries.length > 0) {
+//     patient = await this.findOne({ $or: userQueries });
+//     if (patient && (!patient.name || patient.name === "Patient")) {
+//       patient.name = patientName;
+//       await patient.save();
+//     } else {
+//       patient = null;
+//     }
+//   }
+
+//   if (!patient) {
+//     patient = await this.create({
+//       clerkId: clerkId ? String(clerkId) : undefined,
+//       userId: userId && mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : undefined,
+//       name: patientName,
+//       email: email ? String(email).toLowerCase() : "",
+//       phone: phone || "",
+//     });
+//   }
+
+//   return patient;
+// };
+
+patientSchema.statics.findOrCreateForUser = async function ({
+  clerkId,
+  userId,
+  name,
+  email,
+  phone
+}) {
 
   let patient = null;
-  if (userQueries.length > 0 && patientName) {
+
+  // First priority: Clerk ID
+  if (clerkId) {
     patient = await this.findOne({
-      name: new RegExp(`^${patientName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
-      $or: userQueries,
+      clerkId: String(clerkId)
     });
   }
 
-  if (!patient && userQueries.length > 0) {
-    patient = await this.findOne({ $or: userQueries });
-    if (patient && (!patient.name || patient.name === "Patient")) {
-      patient.name = patientName;
-      await patient.save();
-    } else {
-      patient = null;
-    }
-  }
-
-  if (!patient) {
-    patient = await this.create({
-      clerkId: clerkId ? String(clerkId) : undefined,
-      userId: userId && mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : undefined,
-      name: patientName,
-      email: email ? String(email).toLowerCase() : "",
-      phone: phone || "",
+  // Second priority: Email
+  if (!patient && email) {
+    patient = await this.findOne({
+      email: String(email).toLowerCase()
     });
   }
+
+
+  // Update existing patient
+  if (patient) {
+
+    if (name) patient.name = String(name).trim();
+    if (phone) patient.phone = String(phone).trim();
+
+    await patient.save();
+
+    return patient;
+  }
+
+
+  // Create new patient only if not exists
+  patient = await this.create({
+    clerkId: clerkId ? String(clerkId) : undefined,
+
+    userId:
+      userId && mongoose.Types.ObjectId.isValid(userId)
+        ? new mongoose.Types.ObjectId(userId)
+        : undefined,
+
+    name: String(name || "Patient").trim(),
+    email: email ? String(email).toLowerCase() : "",
+    phone: phone || "",
+  });
+
 
   return patient;
 };

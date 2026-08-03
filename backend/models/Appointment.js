@@ -8,7 +8,8 @@ const appointmentSchema = new mongoose.Schema(
       index: true,
     },
     patientId: {
-      type: mongoose.Schema.Types.Mixed, // Patient._id or Clerk ID string
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Patient",
       required: true,
       index: true,
     },

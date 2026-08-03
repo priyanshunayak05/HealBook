@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const ServiceAppointment = require("../models/serviceAppointment");
+const ServiceAppointment = require("../models/ServiceAppointment");
 const Service = require("../models/Service");
 const stripe = process.env.STRIPE_SECRET_KEY ? require("stripe")(process.env.STRIPE_SECRET_KEY) : null;
 

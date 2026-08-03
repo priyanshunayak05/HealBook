@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import {
   User,
   Activity,
@@ -28,9 +28,14 @@ const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.
 
 export default function PatientProfilePage() {
   const { patientId } = useParams();
+  const location = useLocation();
+
+  const selectedPatient = location.state?.patient;
+
+  const finalPatient = selectedPatient || { patientId };
   const [activeTab, setActiveTab] = useState("history"); // history, prescriptions, reports, referrals
 
-  const [patientDetails, setPatientDetails] = useState(null);
+  const [patientDetails, setPatientDetails] = useState(selectedPatient || null);;
   const [history, setHistory] = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
   const [referrals, setReferrals] = useState([]);
@@ -44,7 +49,7 @@ export default function PatientProfilePage() {
 
   useEffect(() => {
     fetchPatientData(1);
-  }, [patientId]);
+  }, [patientId, selectedPatient]);
 
   const fetchPatientData = async (targetPage = 1) => {
     const token = localStorage.getItem("doctorToken_v1");
@@ -72,7 +77,34 @@ export default function PatientProfilePage() {
         setHasMore(historyData.meta?.hasMore || false);
 
         if (historyData.patientDetails) {
-          setPatientDetails(historyData.patientDetails);
+
+          setPatientDetails((prev) => ({
+            ...historyData.patientDetails,
+
+            // Keep My Patients full name
+            name:
+              selectedPatient?.name ||
+              historyData.patientDetails.name ||
+              prev?.name ||
+              "Patient",
+
+            phone:
+              selectedPatient?.phone ||
+              historyData.patientDetails.phone ||
+              prev?.phone ||
+              "N/A",
+
+            email:
+              selectedPatient?.email ||
+              historyData.patientDetails.email ||
+              prev?.email ||
+              "N/A",
+
+            patientId:
+              selectedPatient?.patientId ||
+              patientId
+          }));
+
         } else if (consults.length > 0 && targetPage === 1) {
           const latest = consults[0];
           setPatientDetails((prev) => ({
@@ -251,11 +283,10 @@ export default function PatientProfilePage() {
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`pb-4 text-xs font-bold flex items-center gap-2 border-b-2 transition whitespace-nowrap ${
-                active
+              className={`pb-4 text-xs font-bold flex items-center gap-2 border-b-2 transition whitespace-nowrap ${active
                   ? "border-blue-600 text-blue-600"
                   : "border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300"
-              }`}
+                }`}
             >
               <Icon size={16} />
               <span>{t.label}</span>
@@ -513,10 +544,9 @@ export default function PatientProfilePage() {
                             Specialization Required: {ref.specialization || "General Specialization"}
                           </div>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${
-                          ref.status === "accepted" ? "bg-emerald-100 text-emerald-800" :
-                          ref.status === "rejected" ? "bg-rose-100 text-rose-800" : "bg-amber-100 text-amber-800"
-                        }`}>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${ref.status === "accepted" ? "bg-emerald-100 text-emerald-800" :
+                            ref.status === "rejected" ? "bg-rose-100 text-rose-800" : "bg-amber-100 text-amber-800"
+                          }`}>
                           {ref.status}
                         </span>
                       </div>
