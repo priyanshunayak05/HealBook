@@ -30,6 +30,8 @@ import DoctorPatients from "./doctor/PatientsPage/PatientsPage";
 import PatientProfile from "./doctor/PatientProfilePage/PatientProfilePage";
 import DoctorReferrals from "./doctor/ReferralsPage/ReferralsPage";
 
+import HealthAssistant from "./components/HealthAssistant/HealthAssistant";
+
 const ScrollButton = () => {
   const [visible, setVisible] = useState(false);
 
@@ -179,6 +181,7 @@ function MainLayout() {
         </Routes>
       </main>
       <Footer />
+      <HealthAssistant />
     </div>
   );
 }

@@ -22,13 +22,39 @@ const api = axios.create({
   timeout: 10000,
 });
 
+// Store for Clerk token getter function
+let clerkTokenGetter = null;
+
+/**
+ * Set the Clerk token getter function (called from components using Clerk)
+ * This allows the API client to dynamically fetch fresh tokens for each request
+ */
+export const setClerkTokenGetter = (tokenGetter) => {
+  clerkTokenGetter = tokenGetter;
+};
+
 api.interceptors.request.use(
-  (config) => {
-    // Only attach local token if Authorization header was not explicitly provided
+  async (config) => {
+    // Only attach token if Authorization header was not explicitly provided
     if (!config.headers["Authorization"] && !config.headers["authorization"]) {
-      const localToken = localStorage.getItem("doctorToken_v1") || localStorage.getItem("token");
-      if (localToken) {
-        config.headers["Authorization"] = `Bearer ${localToken}`;
+      let token = null;
+
+      // Try to get Clerk token first (for authenticated Clerk users)
+      if (clerkTokenGetter) {
+        try {
+          token = await clerkTokenGetter();
+        } catch (err) {
+          console.warn("Failed to get Clerk token:", err?.message);
+        }
+      }
+
+      // Fallback to legacy tokens in localStorage
+      if (!token) {
+        token = localStorage.getItem("doctorToken_v1") || localStorage.getItem("token");
+      }
+
+      if (token) {
+        config.headers["Authorization"] = `Bearer ${token}`;
       }
     }
     return config;

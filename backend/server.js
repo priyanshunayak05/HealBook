@@ -22,6 +22,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const doctorPanelRoutes = require("./routes/doctorPanelRoutes");
 const medicalRecordRoutes = require("./routes/medicalRecordRoutes");
 const referralRoutes = require("./routes/referralRoutes");
+const aiRoutes = require("./routes/aiRoutes");
 const {
   getPatientPrescriptions,
   getPatientMedicalHistory,
@@ -112,6 +113,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/doctor", doctorPanelRoutes);
 app.use("/api/medical-records", medicalRecordRoutes);
 app.use("/api/referrals", referralRoutes);
+app.use("/api/ai", aiRoutes);
 app.get("/api/patients/:patientId/history", authenticate, getPatientMedicalHistory);
 app.get("/api/patient/:patientId/prescriptions", authenticate, getPatientPrescriptions);
 app.post("/api/consultations/create", authenticate, createMedicalRecord);

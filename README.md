@@ -111,7 +111,17 @@ CLOUDINARY_API_SECRET=_vB12Emacg9H0Ox5-yvjcI6P7a0
 STRIPE_SECRET_KEY=sk_test_...
 FRONTEND_URL=http://localhost:5173
 CLERK_SECRET_KEY=sk_test_...
+
+# AI Health Assistant - Gemini API
+# Get your API key from: https://makersuite.google.com/app/apikey
+GEMINI_API_KEY=your_gemini_api_key_here
+# Optional: Gemini model (default: gemini-2.0-flash)
+# GEMINI_MODEL=gemini-2.0-flash
+# Optional: Gemini request timeout in milliseconds (default: 20000)
+# GEMINI_TIMEOUT_MS=20000
 ```
+
+A `.env.example` file is provided in the `backend/` directory for reference.
 
 ---
 
@@ -194,6 +204,11 @@ npm run dev
 | **GET** | `/api/departments` | Public | List clinical departments & headcount |
 | **GET** | `/api/admin/dashboard` | Private (Admin) | Overall system analytics & stats |
 | **POST** | `/api/admin/doctors/bulk-delete` | Private (Superadmin)| Elevated bulk deletion of doctors |
+| **POST** | `/api/ai/symptom-check` | Private (Patient) | AI symptom check and health guidance |
+| **GET** | `/api/ai/conversations` | Private (Patient) | List patient AI conversations |
+| **GET** | `/api/ai/conversations/latest` | Private (Patient) | Get most recent AI conversation |
+| **GET** | `/api/ai/conversations/:id` | Private (Patient) | Get specific AI conversation |
+| **POST** | `/api/ai/conversations` | Private (Patient) | Create new AI conversation |
 
 ---
 
@@ -203,6 +218,130 @@ npm run dev
 - **Header Protection**: Standard security headers configured via `helmet`.
 - **Rate Limiting**: API routes rate-limited to 1,000 requests per 15 minutes to prevent abuse.
 - **Secure File Storage**: File uploads processed in-memory / temporary disk via `multer`, securely stored on Cloudinary over TLS/HTTPS, and cleaned up locally immediately after upload.
+
+---
+
+## 🤖 AI Health Assistant
+
+The platform includes an AI-powered Health Assistant that provides preliminary health information to patients using Google's Gemini API.
+
+### Features
+
+**Backend (Part 1):**
+- **Symptom Analysis**: Patients can describe their symptoms and receive preliminary guidance
+- **Conversation Management**: Multi-turn conversations with context retention
+- **Emergency Detection**: Deterministic red-flag detection for urgent symptoms
+- **Structured Responses**: AI responses are validated and formatted for patient safety
+- **Rate Limiting**: Protection against abuse (15 requests/minute per patient)
+- **Patient Isolation**: Each patient's conversations are private and secure
+
+**Frontend (Part 2):**
+- **Floating Chatbot**: Clean, modern chat interface accessible from any patient page
+- **Quick Actions**: Pre-built buttons for common symptoms (Fever, Headache, Cold/Cough, Medicine Question)
+- **Real-time Chat**: Live messaging with typing indicators and auto-scroll
+- **Emergency Warnings**: Prominent alerts when urgent medical attention is needed
+- **Appointment Integration**: Direct link to book appointments when recommended
+- **Conversation History**: Automatically loads previous conversations
+- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
+- **Accessibility**: Keyboard navigation, proper labels, and ARIA attributes
+
+### How It Works
+
+1. **Patient clicks the Health Assistant button** (bottom-right corner)
+2. **Chat window opens** with a welcome message and quick action buttons
+3. **Patient describes symptoms** (or clicks a quick action)
+4. **Backend processes the request**:
+   - Checks for emergency red flags (chest pain, difficulty breathing, etc.)
+   - Sends to Gemini AI for analysis
+   - Returns structured response with guidance
+5. **Frontend displays the response** with:
+   - Follow-up questions if needed
+   - Self-care recommendations
+   - Warning signs to watch for
+   - Appointment booking button if recommended
+6. **Emergency detection** shows urgent care warning when needed
+
+### API Endpoints
+
+| HTTP Method | Endpoint | Access Level | Description |
+| :--- | :--- | :--- | :--- |
+| **POST** | `/api/ai/symptom-check` | Private (Patient) | Send a symptom message and receive AI guidance |
+| **GET** | `/api/ai/conversations` | Private (Patient) | List all patient conversations |
+| **GET** | `/api/ai/conversations/latest` | Private (Patient) | Get the most recent conversation |
+| **GET** | `/api/ai/conversations/:id` | Private (Patient) | Get a specific conversation with messages |
+| **POST** | `/api/ai/conversations` | Private (Patient) | Create a new conversation |
+
+### Example Usage
+
+**Symptom Check Request:**
+```bash
+POST /api/ai/symptom-check
+Authorization: Bearer <patient_token>
+Content-Type: application/json
+
+{
+  "message": "I have a headache and fever since yesterday",
+  "conversation_id": "optional-uuid-for-existing-conversation"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "conversation_id": "uuid",
+    "response": "I understand you're experiencing a headache and fever...",
+    "severity": "moderate",
+    "requires_urgent_attention": false,
+    "recommend_appointment": true,
+    "has_upcoming_appointment": false,
+    "degraded": false,
+    "disclaimer": "This is preliminary health information and not a medical diagnosis."
+  }
+}
+```
+
+### Safety Features
+
+1. **Deterministic Red-Flag Detection**: Emergency symptoms (chest pain, difficulty breathing, etc.) are detected before AI processing
+2. **No Diagnosis**: The AI never claims certainty or provides definitive diagnoses
+3. **No Prescriptions**: The AI never recommends specific medications or dosages
+4. **Professional Referral**: Always encourages consultation with healthcare professionals
+5. **Fallback Responses**: If Gemini API fails, safe fallback responses are provided
+6. **Input Validation**: All inputs are sanitized and validated
+7. **Rate Limiting**: Prevents abuse and excessive API calls
+8. **Patient Isolation**: Each patient can only access their own conversations
+
+### Configuration
+
+The AI Health Assistant can be configured via environment variables:
+
+**Backend (.env):**
+- `GEMINI_API_KEY`: Your Google Gemini API key (required)
+- `GEMINI_MODEL`: Gemini model to use (default: `gemini-2.0-flash`)
+- `GEMINI_TIMEOUT_MS`: Request timeout in milliseconds (default: `20000`)
+
+**Frontend (.env):**
+- `VITE_BACKEND_URL`: Backend API URL (optional, defaults to localhost:4000 or production URL)
+
+### Frontend Components
+
+**HealthAssistant Component** (`frontend/src/components/HealthAssistant/HealthAssistant.jsx`):
+- Floating chatbot button (bottom-right)
+- Chat window with message history
+- Quick action buttons for common symptoms
+- Emergency warning display
+- Appointment booking integration
+- New conversation button
+- Loading and error states
+
+**AI API Service** (`frontend/src/services/aiApi.js`):
+- `sendSymptomCheck(message, conversationId)`: Send symptom to backend
+- `getLatestConversation()`: Load most recent conversation
+- `createConversation()`: Start new conversation
+- `getConversationById(id)`: Load specific conversation
+- `getConversations(limit, skip)`: List all conversations
 
 ---
 
