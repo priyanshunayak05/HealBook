@@ -93,14 +93,14 @@ export default function Footer() {
                 <div className={footerStyles.contactIconWrapper}>
                   <MapPin className={footerStyles.contactIcon} />
                 </div>
-                <span className={footerStyles.contactText}>Lucknow, Uttar Pradesh</span>
+                <span className={footerStyles.contactText}>Jhansi, Uttar Pradesh</span>
               </div>
 
               <div className={footerStyles.contactItem}>
                 <div className={footerStyles.contactIconWrapper}>
                   <Phone className={footerStyles.contactIcon} />
                 </div>
-                <span className={footerStyles.contactText}>+91 522 XXX XXXX</span>
+                <span className={footerStyles.contactText}>+91 9236251025</span>
               </div>
 
               <div className={footerStyles.contactItem}>

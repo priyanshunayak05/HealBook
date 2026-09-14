@@ -170,15 +170,15 @@ export default function ContactPage() {
                 <option value="">Select Service</option>
                 {form.department && servicesMapping[form.department]
                   ? servicesMapping[form.department].map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))
                   : genericServices.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
               </select>
             </div>
 
@@ -209,11 +209,11 @@ export default function ContactPage() {
         <div className={contactPageStyles.infoContainer}>
           <div className={contactPageStyles.infoCard}>
             <h3 className={`${contactPageStyles.infoTitle} text-blue-900`}>MediCare HQ</h3>
-            <p className={contactPageStyles.infoText}>Gomti Nagar, Lucknow, Uttar Pradesh, 226010</p>
+            <p className={contactPageStyles.infoText}>Gomti Nagar, Jhansi, Uttar Pradesh, 284201</p>
 
             <div className={contactPageStyles.infoItem}>
               <Phone size={16} className="text-blue-600" />
-              <span>+91 522 XXX XXXX</span>
+              <span>+91 9236251025</span>
             </div>
 
             <div className={contactPageStyles.infoItem}>

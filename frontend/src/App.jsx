@@ -99,15 +99,15 @@ function HomeHero() {
 
             <div className="grid grid-cols-3 gap-6 pt-6 border-t border-blue-100">
               <div>
-                <div className="text-2xl sm:text-3xl font-extrabold text-slate-800">150+</div>
+                <div className="text-2xl sm:text-3xl font-extrabold text-slate-800">10+</div>
                 <div className="text-xs text-slate-500 mt-1 font-semibold">Expert Doctors</div>
               </div>
               <div>
-                <div className="text-2xl sm:text-3xl font-extrabold text-slate-800">20+</div>
+                <div className="text-2xl sm:text-3xl font-extrabold text-slate-800">5+</div>
                 <div className="text-xs text-slate-500 mt-1 font-semibold">Medical Services</div>
               </div>
               <div>
-                <div className="text-2xl sm:text-3xl font-extrabold text-slate-800">99.8%</div>
+                <div className="text-2xl sm:text-3xl font-extrabold text-slate-800">97.8%</div>
                 <div className="text-xs text-slate-500 mt-1 font-semibold">Satisfaction</div>
               </div>
             </div>
@@ -117,7 +117,7 @@ function HomeHero() {
             <div className="relative w-full max-w-md h-80 sm:h-96 rounded-3xl overflow-hidden bg-gradient-to-br from-blue-100 to-sky-200 shadow-2xl border-4 border-white">
               <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80')" }}></div>
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 via-transparent to-transparent"></div>
-              
+
               <div className="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-blue-50 flex items-center gap-4">
                 <div className="p-3 bg-blue-600 text-white rounded-xl shadow-md">
                   <Activity size={24} className="animate-pulse" />
