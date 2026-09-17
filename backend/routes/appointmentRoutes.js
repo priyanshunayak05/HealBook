@@ -1,5 +1,6 @@
 const express = require("express");
 const {
+  getAvailability,
   getAppointments,
   getAppointmentsByDoctor,
   createAppointment,
@@ -12,6 +13,9 @@ const { protect } = require("../middleware/authMiddleware");
 const { authorize } = require("../middleware/roleMiddleware");
 
 const router = express.Router();
+
+// Public — no auth required to check available slots
+router.get("/availability", getAvailability);
 
 router.get("/", protect, getAppointments);
 router.get("/me", protect, getAppointments);
@@ -31,3 +35,4 @@ router.put("/reschedule/:id", protect, updateAppointment);
 router.get("/admin/stats", protect, authorize("admin"), getStats);
 
 module.exports = router;
+

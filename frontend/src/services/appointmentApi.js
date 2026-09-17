@@ -1,6 +1,17 @@
 import api from "./api";
 
 export const appointmentApi = {
+  /**
+   * Fetch currently available time slots for a doctor on a specific date.
+   * Returns { availableSlots: string[] }
+   */
+  getAvailableSlots: async (doctorId, date) => {
+    const res = await api.get("/api/appointments/availability", {
+      params: { doctorId, date },
+    });
+    return res.data;
+  },
+
   create: async (appointmentData, token) => {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     const res = await api.post("/api/appointments", appointmentData, { headers });

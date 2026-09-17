@@ -114,4 +114,21 @@ const serviceAppointmentSchema = new mongoose.Schema(
   }
 );
 
+/**
+ * Partial unique index on (serviceId, date, hour, minute, ampm).
+ *
+ * Only applies to ACTIVE appointments (Pending | Confirmed | Rescheduled).
+ * Canceled and Completed appointments are excluded from the uniqueness scope.
+ */
+serviceAppointmentSchema.index(
+  { serviceId: 1, date: 1, hour: 1, minute: 1, ampm: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      status: { $in: ["Pending", "Confirmed", "Rescheduled"] },
+    },
+    name: "unique_active_service_slot",
+  }
+);
+
 module.exports = mongoose.model("ServiceAppointment", serviceAppointmentSchema);

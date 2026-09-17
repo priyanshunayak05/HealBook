@@ -13,5 +13,11 @@ export const serviceApi = {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     const res = await api.post("/api/service-appointments", bookingData, { headers });
     return res.data;
+  },
+  getAvailableSlots: async (serviceId, date) => {
+    const res = await api.get(`/api/service-appointments/availability`, {
+      params: { serviceId, date },
+    });
+    return res.data;
   }
 };

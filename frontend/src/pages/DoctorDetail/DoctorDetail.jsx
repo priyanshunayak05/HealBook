@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -14,6 +14,7 @@ import {
   Shield,
   Users,
   Phone,
+  AlertCircle,
 } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -21,6 +22,7 @@ import "react-toastify/dist/ReactToastify.css";
 // Clerk client hooks
 import { useAuth, useUser, useClerk } from "@clerk/clerk-react";
 import { doctorDetailStyles } from "../../assets/dummyStyles";
+import { appointmentApi } from "../../services/appointmentApi";
 
 const API_BASE = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
 
@@ -111,6 +113,11 @@ export default function DoctorDetail() {
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Available slots fetched from backend (real-time, not from local schedule)
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotError, setSlotError] = useState(null);
+
   // Clerk hooks
   const { getToken, isLoaded: authLoaded } = useAuth();
   const { isSignedIn, user, isLoaded: userLoaded } = useUser();
@@ -181,11 +188,44 @@ export default function DoctorDetail() {
   const next7 = useMemo(() => getScheduleDates(doctor?.schedule), [doctor]);
   const fee = Number(doctor?.fee ?? doctor?.fees ?? 0);
 
-  const slots = useMemo(() => {
-    if (!selectedDate || !doctor?.schedule) return [];
-    const key = selectedDate.toISOString().split("T")[0];
-    return doctor.schedule && doctor.schedule[key] ? doctor.schedule[key] : [];
-  }, [selectedDate, doctor]);
+  /**
+   * fetchAvailableSlots — calls the backend availability API.
+   * This is the source of truth for which slots are currently free.
+   * Called whenever the doctor or selected date changes.
+   */
+  const fetchAvailableSlots = useCallback(
+    async (doctorId, dateISO) => {
+      if (!doctorId || !dateISO) {
+        setAvailableSlots([]);
+        return;
+      }
+      setLoadingSlots(true);
+      setSlotError(null);
+      try {
+        const data = await appointmentApi.getAvailableSlots(doctorId, dateISO);
+        setAvailableSlots(Array.isArray(data?.availableSlots) ? data.availableSlots : []);
+      } catch (err) {
+        console.error("fetchAvailableSlots error:", err);
+        setSlotError("Could not load available slots. Please refresh.");
+        setAvailableSlots([]);
+      } finally {
+        setLoadingSlots(false);
+      }
+    },
+    []
+  );
+
+  // Fetch slots whenever the doctor loads or the selected date changes
+  useEffect(() => {
+    if (!doctor || !selectedDate) {
+      setAvailableSlots([]);
+      return;
+    }
+    const dateISO = selectedDate.toISOString().split("T")[0];
+    fetchAvailableSlots(doctor._id || doctor.id, dateISO);
+    // Reset selected slot whenever the date changes
+    setSelectedSlot("");
+  }, [doctor, selectedDate, fetchAvailableSlots]);
 
   // Mobile input handlers: only digits, max 10
   const handleMobileChange = (value) => {
@@ -318,6 +358,22 @@ export default function DoctorDetail() {
       });
 
       const body = await res.json().catch(() => null);
+
+      // ── 409 Conflict: slot was booked by another patient ─────────────────
+      if (res.status === 409) {
+        const msg =
+          body?.message ||
+          "This slot was just booked by another patient. Refreshing available slots...";
+        toast.warn(msg, { position: "top-center", autoClose: 4000 });
+
+        // Re-fetch availability so the UI shows updated slots
+        const dateISO = selectedDate.toISOString().split("T")[0];
+        await fetchAvailableSlots(doctor._id || doctor.id, dateISO);
+        setSelectedSlot(""); // clear the stale selection
+        setIsSubmitting(false);
+        return;
+      }
+
       if (!res.ok) {
         const message =
           body?.message || body?.error || `Booking failed (${res.status})`;
@@ -697,14 +753,38 @@ export default function DoctorDetail() {
                   Available Time Slots
                 </h3>
 
-                <div className={doctorDetailStyles.timeSlotsContainer}>
-                  {slots.length === 0 && (
+              <div className={doctorDetailStyles.timeSlotsContainer}>
+                  {/* Loading state */}
+                  {loadingSlots && (
                     <p className={doctorDetailStyles.noSlotsMessage}>
-                      No time slots for this date.
+                      <Clock className="inline w-4 h-4 mr-1 animate-spin" />
+                      Checking available slots...
                     </p>
                   )}
 
-                  {slots.map((slot) => (
+                  {/* Error fetching slots */}
+                  {!loadingSlots && slotError && (
+                    <p className="text-rose-500 text-sm flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" /> {slotError}
+                    </p>
+                  )}
+
+                  {/* No date selected yet */}
+                  {!loadingSlots && !slotError && !selectedDate && (
+                    <p className={doctorDetailStyles.noSlotsMessage}>
+                      Select a date to see available slots.
+                    </p>
+                  )}
+
+                  {/* No available slots for the selected date */}
+                  {!loadingSlots && !slotError && selectedDate && availableSlots.length === 0 && (
+                    <p className={doctorDetailStyles.noSlotsMessage}>
+                      No available slots for this date.
+                    </p>
+                  )}
+
+                  {/* Render only backend-available slots */}
+                  {!loadingSlots && !slotError && availableSlots.map((slot) => (
                     <button
                       key={slot}
                       onClick={() => setSelectedSlot(slot)}

@@ -1,5 +1,6 @@
 const express = require("express");
 const {
+  getServiceAvailability,
   createServiceAppointment,
   confirmServicePayment,
   getServiceAppointments,
@@ -13,6 +14,7 @@ const { authorize } = require("../middleware/roleMiddleware");
 
 const router = express.Router();
 
+router.get("/availability", getServiceAvailability);
 router.get("/", protect, getServiceAppointments);
 router.get("/me", protect, getServiceAppointments);
 router.get("/patient/:patientId", protect, getServiceAppointmentsByPatient);

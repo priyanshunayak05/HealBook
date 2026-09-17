@@ -4,6 +4,11 @@ const Doctor = require("../models/Doctor");
 const Patient = require("../models/Patient");
 const DoctorPatient = require("../models/DoctorPatient");
 const stripe = process.env.STRIPE_SECRET_KEY ? require("stripe")(process.env.STRIPE_SECRET_KEY) : null;
+const {
+  getAvailableSlots,
+  isValidDateString,
+  isDateInPast,
+} = require("../services/appointmentService");
 
 const safeNumber = (v) => {
   const n = Number(v);
@@ -30,6 +35,79 @@ function resolveClerkUserId(req) {
     return null;
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helper: detect MongoDB E11000 duplicate-key error
+// ─────────────────────────────────────────────────────────────────────────────
+function isDuplicateKeyError(err) {
+  return (
+    err?.code === 11000 ||
+    err?.name === "MongoServerError" && err?.code === 11000
+  );
+}
+
+// @desc    Get available time slots for a doctor on a specific date
+// @route   GET /api/appointments/availability?doctorId=...&date=...
+// @access  Public
+const getAvailability = async (req, res) => {
+  try {
+    const { doctorId, date } = req.query;
+
+    // ── Validate inputs ────────────────────────────────────────────────────
+    if (!doctorId || !String(doctorId).trim()) {
+      return res
+        .status(400)
+        .json({ success: false, message: "doctorId query param is required" });
+    }
+    if (!mongoose.Types.ObjectId.isValid(doctorId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid doctorId format" });
+    }
+    if (!date || !isValidDateString(date)) {
+      return res.status(400).json({
+        success: false,
+        message: "date query param is required and must be in YYYY-MM-DD format",
+      });
+    }
+
+    // ── Fetch doctor ────────────────────────────────────────────────────────
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Doctor not found" });
+    }
+
+    // ── Get all slots the doctor has defined for this date ──────────────────
+    const scheduleMap = doctor.schedule;
+    let allSlots = [];
+    if (scheduleMap) {
+      // Mongoose Map — use .get(); plain objects use bracket notation
+      if (typeof scheduleMap.get === "function") {
+        allSlots = scheduleMap.get(date) || [];
+      } else {
+        allSlots = scheduleMap[date] || [];
+      }
+    }
+    allSlots = Array.isArray(allSlots) ? allSlots : [];
+
+    // ── Subtract booked slots ───────────────────────────────────────────────
+    const availableSlots = await getAvailableSlots(doctorId, date, allSlots);
+
+    return res.json({
+      success: true,
+      doctorId,
+      date,
+      availableSlots,
+    });
+  } catch (err) {
+    console.error("getAvailability error:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error" });
+  }
+};
 
 // @desc    Get all appointments (admin or patient)
 // @route   GET /api/appointments
@@ -277,10 +355,31 @@ const createAppointment = async (req, res) => {
     const effectiveUserId = userIdFromBody && String(userIdFromBody).trim() ? String(userIdFromBody).trim() : authClerkId;
     const effectiveEmail = String(email || patientEmail || authEmail).toLowerCase().trim();
 
+    // ── Input validation ─────────────────────────────────────────────────────
     if (!doctorId) return res.status(400).json({ success: false, message: "Doctor ID is required" });
+    if (!mongoose.Types.ObjectId.isValid(doctorId)) {
+      return res.status(400).json({ success: false, message: "Invalid Doctor ID format" });
+    }
     if (!patientName) return res.status(400).json({ success: false, message: "Patient Name is required" });
     if (!mobile) return res.status(400).json({ success: false, message: "Mobile number is required" });
-    if (!date || !time) return res.status(400).json({ success: false, message: "Date and time slot are required" });
+    if (!date) return res.status(400).json({ success: false, message: "Appointment date is required" });
+    if (!time || !String(time).trim()) return res.status(400).json({ success: false, message: "Appointment time slot is required" });
+
+    // Validate date format
+    if (!isValidDateString(date)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date format. Use YYYY-MM-DD (e.g., 2026-09-25)",
+      });
+    }
+
+    // Reject past dates
+    if (isDateInPast(date)) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot book an appointment in the past. Please select a future date.",
+      });
+    }
 
     if (age !== undefined && age !== null && age !== "") {
       const parsedAge = Number(age);
@@ -291,6 +390,25 @@ const createAppointment = async (req, res) => {
 
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) return res.status(404).json({ success: false, message: "Doctor not found" });
+
+    // ── Validate slot belongs to doctor's schedule ───────────────────────────
+    const scheduleMap = doctor.schedule;
+    let scheduledSlots = [];
+    if (scheduleMap) {
+      if (typeof scheduleMap.get === "function") {
+        scheduledSlots = scheduleMap.get(date) || [];
+      } else {
+        scheduledSlots = scheduleMap[date] || [];
+      }
+    }
+    scheduledSlots = Array.isArray(scheduledSlots) ? scheduledSlots : [];
+
+    if (scheduledSlots.length > 0 && !scheduledSlots.includes(String(time))) {
+      return res.status(400).json({
+        success: false,
+        message: `The selected time slot "${time}" is not in this doctor's schedule for ${date}.`,
+      });
+    }
 
     const numericFee = safeNumber(fees ?? fee ?? doctor.fee ?? 0);
 
@@ -376,24 +494,48 @@ const createAppointment = async (req, res) => {
       // Ignore duplicate compound index error if race condition occurs
     }
 
-    // Free appointment
+    // ── Free appointment ──────────────────────────────────────────────────────
     if (numericFee === 0) {
-      const created = await Appointment.create({
-        ...base,
-        status: "Confirmed",
-        payment: { method: base.payment.method, status: "Paid", amount: 0 },
-        paidAt: new Date(),
-      });
+      let created;
+      try {
+        created = await Appointment.create({
+          ...base,
+          status: "Confirmed",
+          payment: { method: base.payment.method, status: "Paid", amount: 0 },
+          paidAt: new Date(),
+        });
+      } catch (createErr) {
+        if (isDuplicateKeyError(createErr)) {
+          return res.status(409).json({
+            success: false,
+            message:
+              "This appointment slot has already been booked. Please select another slot.",
+          });
+        }
+        throw createErr;
+      }
       return res.status(201).json({ success: true, appointment: created, checkoutUrl: null });
     }
 
-    // Cash payment
+    // ── Cash payment ─────────────────────────────────────────────────────────
     if (paymentMethod === "Cash") {
-      const created = await Appointment.create({
-        ...base,
-        status: "Confirmed",
-        payment: { method: "Cash", status: "Pending", amount: numericFee },
-      });
+      let created;
+      try {
+        created = await Appointment.create({
+          ...base,
+          status: "Confirmed",
+          payment: { method: "Cash", status: "Pending", amount: numericFee },
+        });
+      } catch (createErr) {
+        if (isDuplicateKeyError(createErr)) {
+          return res.status(409).json({
+            success: false,
+            message:
+              "This appointment slot has already been booked. Please select another slot.",
+          });
+        }
+        throw createErr;
+      }
       return res.status(201).json({ success: true, appointment: created, checkoutUrl: null });
     }
 
@@ -441,7 +583,7 @@ const createAppointment = async (req, res) => {
           time: base.time,
           fees: String(numericFee),
           notes: base.notes || "",
-          clerkUserId: clerkUserId || "",
+          clerkUserId: authClerkId || "",
           email: base.email || "",
           owner: resolvedOwner || "",
         },
@@ -488,42 +630,53 @@ const confirmPayment = async (req, res) => {
           email: meta.email
         });
 
-
-        appt = await Appointment.create({
-
-          patientRef: patientDoc?._id,
-          patientId: patientDoc?._id,
-
-          doctorId: meta.doctorId,
-          doctorName: meta.doctorName || "",
-          speciality: meta.speciality || "",
-
-          doctorImage: {
-            url: meta.doctorImageUrl || "",
-            publicId: meta.doctorImagePublicId || ""
-          },
-
-          patientName: meta.patientName,
-          mobile: meta.mobile,
-          age: meta.age ? Number(meta.age) : undefined,
-          gender: meta.gender || "",
-          date: meta.date,
-          time: meta.time,
-          fees: numericFee,
-          status: "Confirmed",
-          payment: {
-            method: "Online",
-            status: "Paid",
-            amount: numericFee,
-            providerId: session.payment_intent || "",
-          },
-          notes: meta.notes || "",
-          createdBy: meta.clerkUserId || "guest",
-          email: meta.email || "",
-          owner: meta.owner || meta.doctorId,
-          sessionId: session_id,
-          paidAt: new Date(),
-        });
+        // Guard against duplicate-key error: if another confirm-payment call
+        // already created this appointment, just fetch the existing one.
+        try {
+          appt = await Appointment.create({
+            patientRef: patientDoc?._id,
+            patientId: patientDoc?._id,
+            doctorId: meta.doctorId,
+            doctorName: meta.doctorName || "",
+            speciality: meta.speciality || "",
+            doctorImage: {
+              url: meta.doctorImageUrl || "",
+              publicId: meta.doctorImagePublicId || ""
+            },
+            patientName: meta.patientName,
+            mobile: meta.mobile,
+            age: meta.age ? Number(meta.age) : undefined,
+            gender: meta.gender || "",
+            date: meta.date,
+            time: meta.time,
+            fees: numericFee,
+            status: "Confirmed",
+            payment: {
+              method: "Online",
+              status: "Paid",
+              amount: numericFee,
+              providerId: session.payment_intent || "",
+            },
+            notes: meta.notes || "",
+            createdBy: meta.clerkUserId || "guest",
+            email: meta.email || "",
+            owner: meta.owner || meta.doctorId,
+            sessionId: session_id,
+            paidAt: new Date(),
+          });
+        } catch (createErr) {
+          if (isDuplicateKeyError(createErr)) {
+            // Slot was already confirmed by a concurrent request — fetch it
+            appt = await Appointment.findOne({
+              doctorId: meta.doctorId,
+              date: meta.date,
+              time: meta.time,
+              status: { $in: ["Pending", "Confirmed", "Rescheduled"] },
+            });
+          } else {
+            throw createErr;
+          }
+        }
       } else {
         // Fallback search by patient details if created before session
         appt = await Appointment.findOneAndUpdate(
@@ -677,6 +830,7 @@ const getAppointmentsByPatient = async (req, res) => {
 };
 
 module.exports = {
+  getAvailability,
   getAppointments,
   getAppointmentsByDoctor,
   createAppointment,

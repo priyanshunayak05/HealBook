@@ -11,6 +11,7 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { useAuth, useUser, useClerk } from "@clerk/clerk-react";
 import toast, { Toaster } from "react-hot-toast";
 import { serviceDetailStyles, iconSize } from "../../assets/dummyStyles";
+import { serviceApi } from "../../services/serviceApi";
 
 const DEFAULT_HOST = (import.meta.env.VITE_BACKEND_URL || "https://healbook-backend.onrender.com").replace(/\/$/, "");
 
@@ -48,6 +49,9 @@ export default function ServiceDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   const isValidMobile = (m) => /^\d{10}$/.test(m);
 
@@ -267,6 +271,35 @@ export default function ServiceDetail() {
     return out;
   }
 
+  const fetchAvailability = async (srvId, dateStr) => {
+    if (!srvId || !dateStr) {
+      setAvailableSlots([]);
+      return;
+    }
+    setLoadingSlots(true);
+    try {
+      const data = await serviceApi.getAvailableSlots(srvId, dateStr);
+      if (data.success) {
+        setAvailableSlots(data.availableSlots || []);
+      } else {
+        setAvailableSlots(service.slots[dateStr] || []); // fallback
+      }
+    } catch (err) {
+      console.error("Failed to fetch service availability:", err);
+      // Fallback to all slots if backend call fails
+      setAvailableSlots(service?.slots[dateStr] || []);
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+
+  useEffect(() => {
+    if (service && selectedDate) {
+      const srvId = (service.raw && (service.raw._id || service.raw.id)) || service.id;
+      fetchAvailability(srvId, selectedDate);
+    }
+  }, [service, selectedDate]);
+
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     setSubmitError(null);
@@ -376,6 +409,14 @@ export default function ServiceDetail() {
         } else {
           setSubmitError(String(msg));
         }
+        if (res.status === 409) {
+          toast.error("This slot was just booked by someone else! Please select a different time.", { duration: 5000 });
+          setSelectedTime("");
+          const srvId = (service?.raw && (service.raw._id || service.raw.id)) || service?.id;
+          if (srvId && selectedDate) {
+             fetchAvailability(srvId, selectedDate);
+          }
+        }
         setSubmitting(false);
         return;
       }
@@ -405,7 +446,16 @@ export default function ServiceDetail() {
       setEmail("");
     } catch (err) {
       console.error("Booking submit error:", err);
-      setSubmitError("Network error while creating booking.");
+      if (err.response?.status === 409) {
+         toast.error("This slot was just booked by someone else! Please select a different time.", { duration: 5000 });
+         setSelectedTime("");
+         const srvId = (service?.raw && (service.raw._id || service.raw.id)) || service?.id;
+         if (srvId && selectedDate) {
+            fetchAvailability(srvId, selectedDate);
+         }
+      } else {
+         setSubmitError("Network error while creating booking.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -596,29 +646,34 @@ export default function ServiceDetail() {
             </div>
           </div>
 
-          {/* TIME */}
+        {/* TIME */}
           {selectedDate && (
             <div className={serviceDetailStyles.timeSection}>
               <h2 className={serviceDetailStyles.timeTitle}>Select Time *</h2>
               <div className={serviceDetailStyles.timeScrollContainer}>
                 <div className={serviceDetailStyles.timeButtonsContainer}>
-                  {(service.slots[selectedDate] || []).map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => setSelectedTime(t)}
-                      className={serviceDetailStyles.timeButton(
-                        selectedTime === t,
+                  {loadingSlots ? (
+                    <div className="text-slate-500 italic py-2">Refreshing slots...</div>
+                  ) : (
+                    <>
+                      {availableSlots.map((t) => (
+                        <button
+                          key={t}
+                          onClick={() => setSelectedTime(t)}
+                          className={serviceDetailStyles.timeButton(
+                            selectedTime === t,
+                          )}
+                        >
+                          <Clock className={`${iconSize.small} mr-1`} />
+                          {t}
+                        </button>
+                      ))}
+                      {availableSlots.length === 0 && (
+                        <div className={serviceDetailStyles.noSlotsMessage}>
+                          No slots available for this date.
+                        </div>
                       )}
-                    >
-                      <Clock className={`${iconSize.small} mr-1`} />
-                      {t}
-                    </button>
-                  ))}
-                  {(!service.slots[selectedDate] ||
-                    service.slots[selectedDate].length === 0) && (
-                    <div className={serviceDetailStyles.noSlotsMessage}>
-                      No slots available for this date.
-                    </div>
+                    </>
                   )}
                 </div>
               </div>

@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 const ServiceAppointment = require("../models/ServiceAppointment");
 const Service = require("../models/Service");
 const stripe = process.env.STRIPE_SECRET_KEY ? require("stripe")(process.env.STRIPE_SECRET_KEY) : null;
+const {
+  getServiceAvailableSlots,
+  isValidDateString,
+  parseTimeString,
+} = require("../services/serviceAppointmentService");
 
 const safeNumber = (val) => {
   if (val === undefined || val === null || val === "") return null;
@@ -9,27 +14,7 @@ const safeNumber = (val) => {
   return Number.isFinite(n) ? n : null;
 };
 
-function parseTimeString(timeStr) {
-  if (!timeStr || typeof timeStr !== "string") return null;
-  const t = timeStr.trim();
-  const m = t.match(/([0-9]{1,2}):?([0-9]{0,2})\s*(AM|PM|am|pm)?/);
-  if (!m) return null;
-  let hh = parseInt(m[1], 10);
-  let mm = m[2] ? parseInt(m[2], 10) : 0;
-  const ampm = (m[3] || "").toUpperCase();
-  if (Number.isNaN(hh) || Number.isNaN(mm)) return null;
-
-  if (ampm) {
-    if (hh < 1 || hh > 12 || mm < 0 || mm > 59) return null;
-    return { hour: hh, minute: mm, ampm };
-  }
-
-  if (hh < 0 || hh > 23 || mm < 0 || mm > 59) return null;
-  if (hh === 0) return { hour: 12, minute: mm, ampm: "AM" };
-  if (hh === 12) return { hour: 12, minute: mm, ampm: "PM" };
-  if (hh > 12) return { hour: hh - 12, minute: mm, ampm: "PM" };
-  return { hour: hh, minute: mm, ampm: "AM" };
-}
+// Using parseTimeString from service layer
 
 const buildFrontendBase = (req) => {
   const env = process.env.FRONTEND_URL;
@@ -48,6 +33,66 @@ function resolveClerkUserId(req) {
     return null;
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helper: detect MongoDB E11000 duplicate-key error
+// ─────────────────────────────────────────────────────────────────────────────
+function isDuplicateKeyError(err) {
+  return (
+    err?.code === 11000 ||
+    err?.name === "MongoServerError" && err?.code === 11000
+  );
+}
+
+// @desc    Get available time slots for a service on a specific date
+// @route   GET /api/service-appointments/availability?serviceId=...&date=...
+// @access  Public
+const getServiceAvailability = async (req, res) => {
+  try {
+    const { serviceId, date } = req.query;
+
+    if (!serviceId || !String(serviceId).trim()) {
+      return res.status(400).json({ success: false, message: "serviceId query param is required" });
+    }
+    if (!mongoose.Types.ObjectId.isValid(serviceId)) {
+      return res.status(400).json({ success: false, message: "Invalid serviceId format" });
+    }
+    if (!date || !isValidDateString(date)) {
+      return res.status(400).json({
+        success: false,
+        message: "date query param is required and must be in YYYY-MM-DD format",
+      });
+    }
+
+    const service = await Service.findById(serviceId);
+    if (!service) {
+      return res.status(404).json({ success: false, message: "Service not found" });
+    }
+
+    const scheduleMap = service.slots;
+    let allSlots = [];
+    if (scheduleMap) {
+      if (typeof scheduleMap.get === "function") {
+        allSlots = scheduleMap.get(date) || [];
+      } else {
+        allSlots = scheduleMap[date] || [];
+      }
+    }
+    allSlots = Array.isArray(allSlots) ? allSlots : [];
+
+    const availableSlots = await getServiceAvailableSlots(serviceId, date, allSlots);
+
+    return res.json({
+      success: true,
+      serviceId,
+      date,
+      availableSlots,
+    });
+  } catch (err) {
+    console.error("getServiceAvailability error:", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 
 // @desc    Create new service appointment
 // @route   POST /api/service-appointments
@@ -131,18 +176,20 @@ const createServiceAppointment = async (req, res) => {
       return res.status(400).json({ success: false, message: "Time missing or invalid — provide time string or hour, minute and ampm." });
     }
 
-    // DUPLICATE BOOKING CHECK
+    // DUPLICATE BOOKING CHECK (Legacy - leaving this in to catch early, but DB index is the real guard)
     try {
       const existing = await ServiceAppointment.findOne({
         serviceId: String(serviceId),
-        createdBy: authClerkId,
         date: String(date),
         hour: Number(finalHour),
         minute: Number(finalMinute),
         ampm: finalAmpm,
-        status: { $ne: "Canceled" },
+        status: { $in: ["Pending", "Confirmed", "Rescheduled"] },
       }).lean();
-      if (existing) return res.status(409).json({ success: false, message: "You already have a booking for this service at the selected date and time." });
+      
+      if (existing) {
+        return res.status(409).json({ success: false, message: "This service slot has already been booked. Please select another slot." });
+      }
     } catch (chkErr) {
       console.warn("Duplicate booking check failed:", chkErr);
     }
@@ -178,17 +225,33 @@ const createServiceAppointment = async (req, res) => {
 
     // Free appointment
     if (numericAmount === 0) {
-      const created = await ServiceAppointment.create({ ...base, status: "Confirmed", payment: { method: "Cash", status: "Paid", amount: 0, paidAt: new Date() } });
+      let created;
+      try {
+        created = await ServiceAppointment.create({ ...base, status: "Confirmed", payment: { method: "Cash", status: "Paid", amount: 0, paidAt: new Date() } });
+      } catch (createErr) {
+        if (isDuplicateKeyError(createErr)) {
+          return res.status(409).json({ success: false, message: "This service slot has already been booked. Please select another slot." });
+        }
+        throw createErr;
+      }
       return res.status(201).json({ success: true, appointment: created });
     }
 
     // Cash booking
     if (paymentMethod === "Cash") {
-      const created = await ServiceAppointment.create({
-        ...base,
-        status: "Confirmed",
-        payment: { method: "Cash", status: "Pending", amount: numericAmount, meta },
-      });
+      let created;
+      try {
+        created = await ServiceAppointment.create({
+          ...base,
+          status: "Confirmed",
+          payment: { method: "Cash", status: "Pending", amount: numericAmount, meta },
+        });
+      } catch (createErr) {
+        if (isDuplicateKeyError(createErr)) {
+          return res.status(409).json({ success: false, message: "This service slot has already been booked. Please select another slot." });
+        }
+        throw createErr;
+      }
       return res.status(201).json({ success: true, appointment: created, checkoutUrl: null });
     }
 
@@ -282,31 +345,47 @@ const confirmServicePayment = async (req, res) => {
       const meta = session.metadata || {};
       if (meta.serviceId && meta.patientName && meta.date && meta.hour !== undefined) {
         const numericAmount = safeNumber(meta.fees || (session.amount_total ? session.amount_total / 100 : 0));
-        appt = await ServiceAppointment.create({
-          serviceId: meta.serviceId,
-          serviceName: meta.serviceName || "Service",
-          serviceImage: { url: meta.serviceImageUrl || "", publicId: meta.serviceImagePublicId || "" },
-          patientName: meta.patientName,
-          mobile: meta.mobile,
-          age: meta.age ? Number(meta.age) : undefined,
-          gender: meta.gender || "",
-          date: meta.date,
-          hour: Number(meta.hour),
-          minute: Number(meta.minute || 0),
-          ampm: meta.ampm || "AM",
-          fees: numericAmount,
-          status: "Confirmed",
-          payment: {
-            method: "Online",
-            status: "Paid",
-            amount: numericAmount,
-            providerId: session.payment_intent || "",
-            sessionId: session_id,
-            paidAt: new Date(),
-          },
-          notes: meta.notes || "",
-          createdBy: meta.clerkUserId || "guest",
-        });
+        
+        try {
+          appt = await ServiceAppointment.create({
+            serviceId: meta.serviceId,
+            serviceName: meta.serviceName || "Service",
+            serviceImage: { url: meta.serviceImageUrl || "", publicId: meta.serviceImagePublicId || "" },
+            patientName: meta.patientName,
+            mobile: meta.mobile,
+            age: meta.age ? Number(meta.age) : undefined,
+            gender: meta.gender || "",
+            date: meta.date,
+            hour: Number(meta.hour),
+            minute: Number(meta.minute || 0),
+            ampm: meta.ampm || "AM",
+            fees: numericAmount,
+            status: "Confirmed",
+            payment: {
+              method: "Online",
+              status: "Paid",
+              amount: numericAmount,
+              providerId: session.payment_intent || "",
+              sessionId: session_id,
+              paidAt: new Date(),
+            },
+            notes: meta.notes || "",
+            createdBy: meta.clerkUserId || "guest",
+          });
+        } catch (createErr) {
+          if (isDuplicateKeyError(createErr)) {
+            appt = await ServiceAppointment.findOne({
+              serviceId: meta.serviceId,
+              date: meta.date,
+              hour: Number(meta.hour),
+              minute: Number(meta.minute || 0),
+              ampm: meta.ampm || "AM",
+              status: { $in: ["Pending", "Confirmed", "Rescheduled"] },
+            });
+          } else {
+            throw createErr;
+          }
+        }
       } else {
         appt = await ServiceAppointment.findOneAndUpdate(
           {
@@ -533,6 +612,7 @@ const getServiceAppointmentsByPatient = async (req, res) => {
 };
 
 module.exports = {
+  getServiceAvailability,
   createServiceAppointment,
   confirmServicePayment,
   getServiceAppointments,

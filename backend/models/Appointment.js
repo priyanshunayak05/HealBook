@@ -71,4 +71,29 @@ const appointmentSchema = new mongoose.Schema(
   }
 );
 
+/**
+ * Partial unique index on (doctorId, date, time).
+ *
+ * Only applies to ACTIVE appointments (Pending | Confirmed | Rescheduled).
+ * Canceled and Completed appointments are excluded from the uniqueness scope,
+ * so a canceled slot can be re-booked by a new patient.
+ *
+ * This index is the database-level race-condition guard:
+ * even if two POST /appointments requests arrive simultaneously and both
+ * pass application-level checks, MongoDB will reject the second write with
+ * an E11000 DuplicateKey error, which the controller maps to HTTP 409.
+ *
+ * Created by: migrate-unique-slot-index.js (run once before first deploy)
+ */
+appointmentSchema.index(
+  { doctorId: 1, date: 1, time: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      status: { $in: ["Pending", "Confirmed", "Rescheduled"] },
+    },
+    name: "unique_active_slot",
+  }
+);
+
 module.exports = mongoose.model("Appointment", appointmentSchema);
