@@ -129,7 +129,7 @@ app.get("/api/patients/count", async (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("MediCare API is running...");
+  res.send("HealBook API is running...");
 });
 
 // Error handling middleware

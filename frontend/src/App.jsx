@@ -68,7 +68,7 @@ function HomeHero() {
           <div className="space-y-6 text-left">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold shadow-xs">
               <Sparkles size={14} className="text-blue-500" />
-              <span>Welcoming Patients & Practitioners</span>
+              <span>Welcoming Patients</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 leading-tight">
@@ -79,7 +79,7 @@ function HomeHero() {
             </h1>
 
             <p className="text-base sm:text-lg text-slate-600 max-w-xl">
-              Connect with India's best specialists. Book video consultations, clinic slots, or request medical support in seconds.
+              Connect with best doctors. Book online consultations or clinic visits for quick medical support.
             </p>
 
             <div className="flex flex-wrap gap-4 pt-2">

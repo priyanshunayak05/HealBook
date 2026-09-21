@@ -80,7 +80,7 @@ export default function Footer() {
             <div className={footerStyles.logoContainer}>
               <img src={logo} alt="MediCare" className="w-12 h-12 object-contain bg-white p-1.5 rounded-2xl border border-blue-200 shadow-sm" />
               <div>
-                <span className={footerStyles.companyName}>MediCare</span>
+                <span className={footerStyles.companyName}>HealBook</span>
                 <span className={footerStyles.companyTagline}>Healthcare Redefined</span>
               </div>
             </div>
@@ -182,10 +182,10 @@ export default function Footer() {
         {/* Bottom Section */}
         <div className={footerStyles.bottomSection}>
           <div className={footerStyles.copyright}>
-            <span>&copy; {new Date().getFullYear()} MediCare Inc. All rights reserved.</span>
+            <span>&copy; {new Date().getFullYear()} HealBook Inc. All rights reserved.</span>
           </div>
           <div className={footerStyles.designerText}>
-            <span>Designed with care for premium clinical environments.</span>
+            <span>Designed with care for premium clinical environments with ❤️ by Team R.E.M.</span>
           </div>
         </div>
       </div>

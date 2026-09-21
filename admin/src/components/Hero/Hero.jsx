@@ -16,7 +16,7 @@ export default function Hero({ isDoctor = false }) {
                 <img src={logo} alt="MediCare Logo" className={s.logo} />
               </div>
               <h1 className={s.heading}>
-                WELCOME TO MEDICARE ADMIN PANEL
+                WELCOME TO HEALBOOK ADMIN PANEL
               </h1>
               <p className={s.description}>
                 {isDoctor

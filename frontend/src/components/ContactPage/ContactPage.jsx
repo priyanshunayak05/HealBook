@@ -218,7 +218,7 @@ export default function ContactPage() {
 
             <div className={contactPageStyles.infoItem}>
               <Mail size={16} className="text-blue-600" />
-              <span>support@medicare.com</span>
+              <span>support@healbook.com</span>
             </div>
           </div>
 

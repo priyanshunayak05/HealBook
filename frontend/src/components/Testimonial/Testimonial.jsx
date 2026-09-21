@@ -6,16 +6,16 @@ export default function Testimonial() {
   const scrollRefLeft = useRef(null);
   const scrollRefRight = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
-  
+
   const testimonials = [
     {
       id: 1,
-      name: "Dr. Sarah Johnson",
-      role: "Cardiologist",
+      name: "Dr. Bharti",
+      role: "Neurologist",
       rating: 5,
       text: "The appointment booking system is incredibly efficient. It saves me valuable time and helps me focus on patient care.",
       image:
-        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80",
+        "https://res.cloudinary.com/bz7q2jvr/image/upload/v1785743941/doctors/vqpsr5fbmqdfhljb2mzy.png",
       type: "doctor",
     },
     {
@@ -30,12 +30,12 @@ export default function Testimonial() {
     },
     {
       id: 3,
-      name: "Dr. Robert Martinez",
-      role: "Pediatrician",
+      name: "Dr. Amratanjali Sharma",
+      role: "Cardiologist",
       rating: 4,
       text: "This platform has streamlined our clinic operations significantly. Patient management is much more organized.",
       image:
-        "https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=400&q=80",
+        "https://res.cloudinary.com/bz7q2jvr/image/upload/v1785696598/doctors/znlm7e3uacluxhc7ciaf.jpg",
       type: "doctor",
     },
     {
@@ -50,12 +50,12 @@ export default function Testimonial() {
     },
     {
       id: 5,
-      name: "Dr. Amanda Lee",
-      role: "Dermatologist",
+      name: "Dr. Dhruv Pandit",
+      role: "Cardiologist",
       rating: 5,
-      text: "Excellent platform for managing appointments. Automated reminders reduce no-shows dramatically.",
+      text: "Excellent platform for managing appointments.",
       image:
-        "https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=400&q=80",
+        "https://res.cloudinary.com/bz7q2jvr/image/upload/v1785744211/doctors/nfcnkbzl3io51cnajemb.jpg",
       type: "doctor",
     },
     {
@@ -116,11 +116,10 @@ export default function Testimonial() {
 
   const TestimonialCard = ({ testimonial, direction }) => (
     <div
-      className={`${testimonialStyles.testimonialCard} ${
-        direction === "left"
-          ? testimonialStyles.leftCardBorder
-          : testimonialStyles.rightCardBorder
-      }`}
+      className={`${testimonialStyles.testimonialCard} ${direction === "left"
+        ? testimonialStyles.leftCardBorder
+        : testimonialStyles.rightCardBorder
+        }`}
     >
       <div className={testimonialStyles.cardContent}>
         <img
@@ -132,11 +131,10 @@ export default function Testimonial() {
           <div className={testimonialStyles.nameRoleContainer}>
             <div>
               <h4
-                className={`${testimonialStyles.name} ${
-                  direction === "left"
-                    ? testimonialStyles.leftName
-                    : testimonialStyles.rightName
-                }`}
+                className={`${testimonialStyles.name} ${direction === "left"
+                  ? testimonialStyles.leftName
+                  : testimonialStyles.rightName
+                  }`}
               >
                 {testimonial.name}
               </h4>

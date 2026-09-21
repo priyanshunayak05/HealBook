@@ -12,7 +12,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showNavbar, setShowNavbar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  
+
   const [isDoctorLoggedIn, setIsDoctorLoggedIn] = useState(() => {
     try {
       return Boolean(localStorage.getItem(STORAGE_KEY));
@@ -106,7 +106,7 @@ export default function Navbar() {
               </div>
             </div>
             <div className={s.logoTextContainer}>
-              <div className={s.logoTitle}>MediCare</div>
+              <div className={s.logoTitle}>HealBook</div>
               <div className={s.logoSubtitle}>Healthcare System</div>
             </div>
           </Link>
@@ -119,9 +119,8 @@ export default function Navbar() {
                   <Link
                     key={item.href}
                     to={item.href}
-                    className={`${s.navItem} ${
-                      active ? s.navItemActive : s.navItemInactive
-                    }`}
+                    className={`${s.navItem} ${active ? s.navItemActive : s.navItemInactive
+                      }`}
                   >
                     {item.label}
                   </Link>
@@ -194,9 +193,8 @@ export default function Navbar() {
                   key={item.href}
                   to={item.href}
                   onClick={() => setIsOpen(false)}
-                  className={`${s.mobileMenuItem} ${
-                    active ? s.mobileMenuItemActive : s.mobileMenuItemInactive
-                  }`}
+                  className={`${s.mobileMenuItem} ${active ? s.mobileMenuItemActive : s.mobileMenuItemInactive
+                    }`}
                 >
                   {item.label}
                 </Link>
