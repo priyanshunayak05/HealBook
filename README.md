@@ -1,4 +1,4 @@
-# 🏥 MediCare - Advanced Healthcare & Doctor Appointment Platform
+# 🏥 HealBook - Advanced Healthcare & Doctor Appointment Platform
 
 [![Node.js](https://img.shields.io/badge/Node.js-v18%2B-green.svg)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-v19.0-blue.svg)](https://react.dev/)
