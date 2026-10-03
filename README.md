@@ -43,7 +43,46 @@ The goal of HealBook is to reduce the dependency on physical paperwork and provi
 | 🛡️ **Admin & Doctor Portal** | [HealBook Admin Portal](https://heal-book-admin-zeta.vercel.app) | Vercel   |
 | ⚙️ **Backend REST API**       | [HealBook Backend](https://healbook-backend.onrender.com)        | Render   |
 
+
 ---
+# 📸 Screenshots
+
+## 📸 Project Preview
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="https://github.com/user-attachments/assets/6f5dbc55-d94f-4ca7-a58f-dbc8f4fc5a8e" width="100%"/>
+      <br><b>Patient Dashboard</b>
+    </td>
+    <td align="center" width="50%">
+      <img src="https://github.com/user-attachments/assets/227b21f5-cfb1-4fad-83bf-64b29205ee04" width="100%"/>
+      <br><b>Medical Services</b>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="center" width="50%">
+      <img src="https://github.com/user-attachments/assets/d6b9f645-9d25-424f-9f59-6ee12b42632b" width="100%"/>
+      <br><b>Doctor Profile</b>
+    </td>
+    <td align="center" width="50%">
+      <img src="https://github.com/user-attachments/assets/bf1d3aae-b181-4326-b430-d46de2fed18c" width="100%"/>
+      <br><b>Doctor Dashboard</b>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="center" width="50%">
+      <img src="https://github.com/user-attachments/assets/75f37cae-7127-4afd-9319-675f230fd0a3" width="100%"/>
+      <br><b>Doctor Referral</b>
+    </td>
+    <td align="center" width="50%">
+    <img src="https://github.com/user-attachments/assets/38f4231d-265e-4963-89a0-be255a7e5940" width="100%"/>
+    <br><b>Patient Medical History</b>
+  </td>
+  </tr>
+</table>
 
 # 🌟 Features
 
@@ -918,78 +957,6 @@ The platform focuses on reducing friction around:
 * Managing prescriptions
 * Following referrals
 
----
-
-# 📸 Screenshots
-
-> Add screenshots/GIFs of the major workflows here before the project screening.
-
-Recommended screenshots:
-
-1. Patient Home Page
-2. Doctor Search
-3. Doctor Profile
-4. Appointment Booking
-5. Patient Appointment History
-6. Patient Medical History
-7. Digital Prescription
-8. Doctor Dashboard
-9. Doctor Patient History
-10. Doctor Referral
-11. Admin Dashboard
-
-Example:
-
-```markdown
-## 📸 Screenshots
- ```
-
-
-
-## 📸 Project Preview
-
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <img src="https://github.com/user-attachments/assets/6f5dbc55-d94f-4ca7-a58f-dbc8f4fc5a8e" width="100%"/>
-      <br><b>Patient Dashboard</b>
-    </td>
-    <td align="center" width="50%">
-      <img src="https://github.com/user-attachments/assets/227b21f5-cfb1-4fad-83bf-64b29205ee04" width="100%"/>
-      <br><b>Medical Services</b>
-    </td>
-  </tr>
-
-  <tr>
-    <td align="center" width="50%">
-      <img src="https://github.com/user-attachments/assets/d6b9f645-9d25-424f-9f59-6ee12b42632b" width="100%"/>
-      <br><b>Doctor Profile</b>
-    </td>
-    <td align="center" width="50%">
-      <img src="https://github.com/user-attachments/assets/bf1d3aae-b181-4326-b430-d46de2fed18c" width="100%"/>
-      <br><b>Doctor Dashboard</b>
-    </td>
-  </tr>
-
-  <tr>
-    <td align="center" width="50%">
-      <img src="https://github.com/user-attachments/assets/75f37cae-7127-4afd-9319-675f230fd0a3" width="100%"/>
-      <br><b>Doctor Referral</b>
-    </td>
-    <td align="center" width="50%">
-      <!-- Add Screenshot 6 -->
-    </td>
-  </tr>
-
-  <tr>
-    <td align="center" width="50%">
-      <!-- Add Screenshot 7 -->
-    </td>
-    <td align="center" width="50%">
-      <!-- Add Screenshot 8 -->
-    </td>
-  </tr>
-</table>
 ---
 
 # 🤝 Project Structure & Contribution
