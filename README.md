@@ -942,23 +942,54 @@ Example:
 
 ```markdown
 ## 📸 Screenshots
+ ```
 
 
 
+## 📸 Project Preview
 
-### Patient Dashboard
-![Patient Dashboard](./screenshots/patient-dashboard.png)
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="https://github.com/user-attachments/assets/6f5dbc55-d94f-4ca7-a58f-dbc8f4fc5a8e" width="100%"/>
+      <br><b>Patient Dashboard</b>
+    </td>
+    <td align="center" width="50%">
+      <img src="https://github.com/user-attachments/assets/227b21f5-cfb1-4fad-83bf-64b29205ee04" width="100%"/>
+      <br><b>Medical Services</b>
+    </td>
+  </tr>
 
-### Doctor Dashboard
-![Doctor Dashboard](./screenshots/doctor-dashboard.png)
+  <tr>
+    <td align="center" width="50%">
+      <img src="https://github.com/user-attachments/assets/d6b9f645-9d25-424f-9f59-6ee12b42632b" width="100%"/>
+      <br><b>Doctor Profile</b>
+    </td>
+    <td align="center" width="50%">
+      <img src="https://github.com/user-attachments/assets/bf1d3aae-b181-4326-b430-d46de2fed18c" width="100%"/>
+      <br><b>Doctor Dashboard</b>
+    </td>
+  </tr>
 
-### Appointment Booking
-![Appointment Booking](./screenshots/appointment-booking.png)
+  <tr>
+    <td align="center" width="50%">
+      <img src="https://github.com/user-attachments/assets/75f37cae-7127-4afd-9319-675f230fd0a3" width="100%"/>
+      <br><b>Doctor Referral</b>
+    </td>
+    <td align="center" width="50%">
+      <!-- Add Screenshot 6 -->
+    </td>
+  </tr>
 
-### Digital Prescription
-![Prescription](./screenshots/prescription.png)
-```
-
+  <tr>
+    <td align="center" width="50%">
+      <!-- Add Screenshot 7 -->
+    </td>
+    <td align="center" width="50%">
+      <!-- Add Screenshot 8 -->
+    </td>
+  </tr>
+</table>
 ---
 
 # 🤝 Project Structure & Contribution
