@@ -1,350 +1,993 @@
-# 🏥 HealBook - Advanced Healthcare & Doctor Appointment Platform
+# 🏥 HealBook — Healthcare & Doctor Appointment Platform
 
-[![Node.js](https://img.shields.io/badge/Node.js-v18%2B-green.svg)](https://nodejs.org/)
-[![React](https://img.shields.io/badge/React-v19.0-blue.svg)](https://react.dev/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Cluster-brightgreen.svg)](https://www.mongodb.com/)
-[![Express](https://img.shields.io/badge/Express-v4.21-lightgrey.svg)](https://expressjs.com/)
-[![Vite](https://img.shields.io/badge/Vite-v7.1-purple.svg)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-v4.1-38B2AC.svg)](https://tailwindcss.com/)
+<p align="center">
+  <b>A full-stack healthcare platform connecting patients, doctors, and administrators in one secure digital ecosystem.</b>
+</p>
 
-**MediCare** is a modern, full-stack healthcare platform designed to streamline clinical operations, doctor scheduling, patient consultations, and administrative analytics. Built using the MERN stack (MongoDB, Express, React, Node.js) with Vite, Cloudinary, Clerk Authentication, and Tailwind CSS.
-
----
-
-## 🌐 Live Deployments
-
-| Tier / Component | Live URL | Platform |
-| :--- | :--- | :--- |
-| 🌐 **Patient Web Application** | [https://heal-book-frontend.vercel.app](https://heal-book-frontend.vercel.app) | Vercel |
-| 🛡️ **Admin & Doctor Portal** | [https://heal-book-admin-zeta.vercel.app](https://heal-book-admin-zeta.vercel.app) | Vercel |
-| ⚙️ **Backend REST API** | [https://healbook-backend.onrender.com](https://healbook-backend.onrender.com) | Render |
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-v18%2B-green.svg" alt="Node.js"/>
+  <img src="https://img.shields.io/badge/React-v19-blue.svg" alt="React"/>
+  <img src="https://img.shields.io/badge/MongoDB-Atlas-brightgreen.svg" alt="MongoDB"/>
+  <img src="https://img.shields.io/badge/Express-v4.21-lightgrey.svg" alt="Express"/>
+  <img src="https://img.shields.io/badge/Vite-v7.1-purple.svg" alt="Vite"/>
+  <img src="https://img.shields.io/badge/TailwindCSS-v4.1-38B2AC.svg" alt="Tailwind CSS"/>
+</p>
 
 ---
 
-## 🌟 Features Overview
+## 📌 Overview
 
-### 👨‍⚕️ Patient Web Application
-* **Doctor Directory & Filtering**: Search doctors by name, specialty, location, or consultation fee with real-time status indicators (Available / Unavailable).
-* **Online Appointment Booking**: Select available dates and interactive 12-hour/24-hour time slots.
-* **Medical Services & Departments**: Explore clinical services, specialized medical departments, and treatment packages.
-* **User Authentication**: Secure authentication via Clerk Auth and JWT.
+**HealBook** is a full-stack healthcare and doctor appointment management platform built using the **MERN stack**.
 
-### 🩺 Doctor Dashboard & Panel
-* **Profile Management**: Update clinical details, experience, qualifications, biography, consultation fees, and profile avatars stored on **Cloudinary**.
-* **Dynamic Slot Scheduling**: Add, edit, or remove daily consultation time slots.
-* **Appointment Tracking**: View upcoming, confirmed, completed, or cancelled patient appointments.
-* **Metrics & Analytics**: Monitor daily consultation earnings, total patients treated, and patient satisfaction ratings.
+The platform provides separate experiences for **patients, doctors, and administrators**, allowing patients to discover doctors and book appointments, while doctors can manage appointments, maintain patient records, create prescriptions, and refer patients to other specialists.
 
-### 🛡️ Admin & Superadmin Portal
-* **System Analytics & Charts**: Visual data representations using Recharts for appointment counts, department distribution, and clinical revenue.
-* **Doctor Database Management**: Full CRUD capabilities for doctors, including bulk updates and bulk deletion for elevated Superadmin roles.
-* **Department & Service Control**: Manage hospital departments, assign head doctors, and update service details.
-* **Audit & Activity Logs**: Track system-wide activities and security notifications.
-* **Data Export**: Export clinical reports to Excel (`.xlsx`).
+The goal of HealBook is to reduce the dependency on physical paperwork and provide patients with a **centralized digital medical record** that can be accessed whenever required.
+
+### 🎯 Core Objectives
+
+* Simplify doctor discovery and appointment booking.
+* Digitize patient medical records and prescriptions.
+* Allow doctors to maintain patient consultation history.
+* Enable doctors to refer patients to other specialists.
+* Reduce dependency on physical medical documents.
+* Provide administrators with centralized system management.
+* Maintain secure role-based access to healthcare information.
 
 ---
 
-## 🛠️ Technology Stack
+# 🌐 Live Deployments
 
-| Layer | Technologies Used |
-| :--- | :--- |
-| **Frontend Site** | React 19, Vite, Tailwind CSS v4, Lucide Icons, React Router DOM v7, React Toastify, Clerk React SDK |
-| **Admin Portal** | React 19, Vite, Tailwind CSS v4, Recharts, XLSX, Lucide Icons, Clerk React SDK |
-| **Backend API** | Node.js, Express.js, Mongoose (MongoDB Atlas), Cloudinary SDK, Multer, Express Validator |
-| **Security & Middleware** | Helmet headers, Rate Limiting (`express-rate-limit`), Mongo Sanitize, CORS, JWT, BcryptJS |
+| Application                   | Live URL                                                         | Platform |
+| :---------------------------- | :--------------------------------------------------------------- | :------- |
+| 🌐 **Patient Application**    | [HealBook Patient App](https://heal-book-frontend.vercel.app)    | Vercel   |
+| 🛡️ **Admin & Doctor Portal** | [HealBook Admin Portal](https://heal-book-admin-zeta.vercel.app) | Vercel   |
+| ⚙️ **Backend REST API**       | [HealBook Backend](https://healbook-backend.onrender.com)        | Render   |
 
 ---
 
-## 📁 Repository Structure
+# 🌟 Features
+
+## 👤 Patient Features
+
+### 🔎 Doctor Discovery
+
+* Search doctors by:
+
+  * Name
+  * Specialization
+  * Location
+  * Consultation fee
+* View detailed doctor profiles.
+* Check doctor availability.
+* View qualifications, experience, biography, and consultation details.
+
+### 📅 Online Appointment Booking
+
+* Browse available consultation dates.
+* Select available time slots.
+* Book appointments online.
+* View appointment status.
+* Track upcoming and previous appointments.
+
+### 💳 Online Payments
+
+* Integrated payment workflow for consultations.
+* Secure payment processing.
+* Appointment and payment information linked together.
+
+### 📋 Digital Medical History
+
+Patients can access their previous medical information from their account.
+
+Instead of carrying physical medical files from one hospital or doctor to another, patients can:
+
+* View previous consultations.
+* View medical history.
+* View prescriptions issued by doctors.
+* Keep important medical information available for future consultations.
+* Refer to previous prescriptions when consulting another doctor.
+
+> **Goal:** Reduce the need to carry physical medical documents while keeping important healthcare information available digitally.
+
+---
+
+# 👨‍⚕️ Doctor Dashboard
+
+## 📅 Appointment Management
+
+Doctors can:
+
+* View upcoming appointments.
+* View confirmed appointments.
+* View completed appointments.
+* View cancelled appointments.
+* Manage their consultation schedule.
+* Add, update, or remove available time slots.
+
+## 👤 Patient Information
+
+Doctors can access relevant patient information associated with their appointments.
+
+This allows doctors to understand the patient's previous consultations and make better-informed decisions during follow-up visits.
+
+## 📋 Patient Medical History
+
+Doctors can view a patient's previous medical history available through the platform.
+
+This helps doctors:
+
+* Understand previous consultations.
+* Review previous prescriptions.
+* Track the patient's treatment history.
+* Avoid repeatedly asking for information already recorded.
+
+## 💊 Digital Prescriptions
+
+After a consultation, doctors can create and provide a digital prescription for the patient.
+
+The prescription can become part of the patient's digital medical history.
+
+### Benefits
+
+* No dependency on physical prescription copies.
+* Patients can access prescriptions later.
+* Previous prescriptions remain available for future consultations.
+* Doctors can refer to previous treatment information when required.
+
+## 🔄 Patient Referral
+
+Doctors can **refer patients to another doctor or specialist** when additional expertise is required.
+
+The referral workflow can contain relevant information such as:
+
+* Patient information
+* Referring doctor
+* Referred specialist
+* Reason for referral
+* Clinical notes
+* Referral status
+
+This creates a connected workflow between different healthcare professionals instead of requiring patients to manually carry referral documents.
+
+## 👨‍⚕️ Doctor Profile Management
+
+Doctors can manage:
+
+* Profile information
+* Specialization
+* Qualifications
+* Experience
+* Biography
+* Consultation fee
+* Profile image
+* Availability
+
+Profile images are managed using **Cloudinary**.
+
+## 📊 Doctor Dashboard Analytics
+
+Doctors can view useful dashboard metrics such as:
+
+* Total appointments
+* Completed consultations
+* Upcoming appointments
+* Patients treated
+* Consultation earnings
+* Patient feedback/ratings
+
+---
+
+# 🛡️ Admin & Superadmin Portal
+
+The administration portal provides centralized management of the healthcare platform.
+
+### 📊 System Analytics
+
+Administrators can monitor:
+
+* Appointment statistics
+* Doctor statistics
+* Department distribution
+* Service information
+* System-level metrics
+
+### 👨‍⚕️ Doctor Management
+
+Administrators can:
+
+* Add doctors.
+* Update doctor information.
+* View doctors.
+* Delete doctor profiles.
+* Manage doctor information.
+
+Superadmin-level functionality can provide elevated administrative operations.
+
+### 🏥 Department & Service Management
+
+Administrators can:
+
+* Create departments.
+* Update departments.
+* Manage medical services.
+* Assign department heads.
+* Update service information.
+
+### 📝 Audit & Activity Monitoring
+
+The system maintains activity information to help administrators monitor important platform operations and security-related events.
+
+> **Note:** Patient medical information is not provided as a general data-export feature from the admin portal.
+
+---
+
+# 🏗️ System Architecture
+
+The following architecture represents the major components and data flow within HealBook.
+
+```mermaid
+flowchart LR
+
+    P["👤 Patient"] --> UI["💻 React + Tailwind"]
+    D["👨‍⚕️ Doctor"] --> UI
+    A["🛡️ Admin"] --> UI
+
+    UI --> API["⚙️ Node.js + Express REST API"]
+
+    API --> AUTH["🔐 Authentication & Authorization"]
+
+    AUTH --> C["Clerk"]
+    AUTH --> J["JWT"]
+
+    API --> SERVICES["🧩 Backend Services"]
+
+    SERVICES --> APPT["📅 Appointment Service"]
+    SERVICES --> DOC["👨‍⚕️ Doctor Service"]
+    SERVICES --> PAT["👤 Patient Service"]
+    SERVICES --> PRES["💊 Prescription Service"]
+    SERVICES --> REF["🔄 Referral Service"]
+    SERVICES --> PAY["💳 Payment Service"]
+    SERVICES --> ADMIN["🛡️ Admin Service"]
+
+    APPT --> DB[("🍃 MongoDB")]
+    DOC --> DB
+    PAT --> DB
+    PRES --> DB
+    REF --> DB
+    PAY --> DB
+    ADMIN --> DB
+
+    DOC --> CLOUD["☁️ Cloudinary"]
+    PAY --> STRIPE["💳 Stripe"]
+
+    APPT --> IDX["🔐 Partial Unique Index"]
+    IDX --> SAFE["✅ Prevent Double Booking"]
+```
+
+## 🔄 High-Level Request Flow
 
 ```text
-MediCare-Site-main/
-├── backend/                  # Express.js REST API Server
-│   ├── config/               # Database (db.js) & Cloudinary (cloudinary.js) configuration
-│   ├── controllers/          # Business logic handlers (doctor, admin, service, appointment)
-│   ├── middleware/           # Auth, role authorization, multer upload, rate limiters
-│   ├── models/               # Mongoose schemas (Doctor, User, Appointment, Service, etc.)
-│   ├── routes/               # Express API routes
-│   ├── uploads/              # Local temporary file upload directory
-│   ├── .env                  # Backend environment variables
-│   ├── server.js             # API Server entry point
+Patient / Doctor / Admin
+          │
+          ▼
+   React Frontend
+          │
+          ▼
+   Express REST API
+          │
+          ├── Authentication
+          │      ├── Clerk
+          │      └── JWT
+          │
+          ▼
+   Backend Services
+          │
+          ├── Appointment
+          ├── Doctor
+          ├── Patient
+          ├── Prescription
+          ├── Referral
+          ├── Payment
+          └── Administration
+          │
+          ▼
+       MongoDB
+```
+
+### 🔐 Appointment Double-Booking Prevention
+
+HealBook uses a **database-level partial unique index** to prevent two active appointments from occupying the same doctor, date, and time slot.
+
+Conceptually:
+
+```text
+Doctor + Date + Time
+        │
+        ▼
+  Partial Unique Index
+        │
+        ▼
+Prevent Duplicate Active Appointment
+```
+
+This provides an additional layer of protection against race conditions during simultaneous booking requests.
+
+---
+
+# 🛠️ Technology Stack
+
+| Layer                  | Technologies                                |
+| :--------------------- | :------------------------------------------ |
+| **Frontend**           | React 19, Vite, Tailwind CSS v4             |
+| **Routing**            | React Router DOM                            |
+| **UI & Icons**         | Lucide Icons, React Toastify                |
+| **Admin Dashboard**    | React, Vite, Tailwind CSS, Recharts         |
+| **Backend**            | Node.js, Express.js                         |
+| **Database**           | MongoDB Atlas, Mongoose                     |
+| **Authentication**     | Clerk, JWT                                  |
+| **Authorization**      | Role-based access control                   |
+| **File/Image Storage** | Cloudinary                                  |
+| **Payments**           | Stripe                                      |
+| **Security**           | Helmet, CORS, Rate Limiting, Mongo Sanitize |
+| **Password Security**  | BcryptJS                                    |
+| **Validation**         | Express Validator                           |
+| **Deployment**         | Vercel, Render                              |
+
+---
+
+# 🧩 Application Roles
+
+HealBook follows a role-based architecture.
+
+```text
+                    HealBook
+                       │
+          ┌────────────┼────────────┐
+          │            │            │
+          ▼            ▼            ▼
+       Patient       Doctor       Admin
+          │            │            │
+          │            │            │
+      Book Slots   Manage Slots   Manage System
+      View History Appointments    Doctors
+      View Rx      Patient Data   Departments
+      Appointments Prescriptions  Services
+                   Referrals      Analytics
+```
+
+### 👤 Patient
+
+* Search doctors
+* Book appointments
+* Make payments
+* View appointments
+* View medical history
+* View prescriptions
+
+### 👨‍⚕️ Doctor
+
+* Manage profile
+* Manage availability
+* Manage appointments
+* View patient information
+* View patient history
+* Create prescriptions
+* Refer patients to specialists
+
+### 🛡️ Admin
+
+* Manage doctors
+* Manage departments
+* Manage services
+* Monitor system activity
+* View system analytics
+
+---
+
+# 📁 Repository Structure
+
+```text
+HealBook/
+│
+├── backend/                         # Express.js REST API
+│   ├── config/
+│   │   ├── db.js                    # MongoDB configuration
+│   │   └── cloudinary.js            # Cloudinary configuration
+│   │
+│   ├── controllers/                 # Business logic
+│   │   ├── doctorController.js
+│   │   ├── adminController.js
+│   │   ├── appointmentController.js
+│   │   ├── prescriptionController.js
+│   │   └── referralController.js
+│   │
+│   ├── middleware/                  # Authentication & security
+│   │   ├── auth.js
+│   │   ├── roleAuthorization.js
+│   │   ├── rateLimiter.js
+│   │   └── upload.js
+│   │
+│   ├── models/                      # MongoDB/Mongoose models
+│   │   ├── Doctor.js
+│   │   ├── User.js
+│   │   ├── Appointment.js
+│   │   ├── Prescription.js
+│   │   ├── Referral.js
+│   │   └── Service.js
+│   │
+│   ├── routes/                      # REST API routes
+│   ├── uploads/                     # Temporary uploads
+│   ├── server.js                    # Backend entry point
+│   ├── .env                         # Environment variables
 │   └── package.json
 │
-├── frontend/                 # Patient Facing Web Application
+├── frontend/                        # Patient web application
 │   ├── src/
-│   │   ├── assets/           # Dummy styles, branding, and dynamic assets
-│   │   ├── components/       # Pages & modular UI (DoctorsPage, HomeDoctors, AppointmentPage)
-│   │   ├── doctor/           # Doctor Panel components & EditProfilePage
-│   │   ├── pages/            # Page views (DoctorDetail, ServiceDetailPage)
-│   │   └── App.jsx           # Main React App routing
+│   │   ├── assets/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── doctor/
+│   │   └── App.jsx
 │   ├── index.html
 │   └── package.json
 │
-└── admin/                    # Admin & Doctor Management Portal
+└── admin/                           # Admin & Doctor portal
     ├── src/
-    │   ├── components/       # Admin views (AddPage, ListPage, AnalyticsPage, Profile)
-    │   ├── context/          # Admin Authentication context
-    │   └── App.jsx           # Admin Routing & Layout
+    │   ├── components/
+    │   ├── context/
+    │   └── App.jsx
     ├── index.html
     └── package.json
 ```
 
 ---
 
-## ⚙️ Environment Setup & Configuration
+# 🔌 API Endpoints
 
-### Backend Setup (`backend/.env`)
+| Method   | Endpoint                | Access        | Description                         |
+| :------- | :---------------------- | :------------ | :---------------------------------- |
+| `GET`    | `/api/doctors`          | Public        | Fetch doctors with search/filtering |
+| `GET`    | `/api/doctors/:id`      | Public        | Get doctor details                  |
+| `POST`   | `/api/doctors`          | Admin         | Create doctor                       |
+| `PUT`    | `/api/doctors/:id`      | Doctor/Admin  | Update doctor                       |
+| `DELETE` | `/api/doctors/:id`      | Admin         | Delete doctor                       |
+| `GET`    | `/api/doctor/dashboard` | Doctor        | Doctor dashboard metrics            |
+| `GET`    | `/api/doctor/profile`   | Doctor        | Get doctor profile                  |
+| `PUT`    | `/api/doctor/profile`   | Doctor        | Update doctor profile               |
+| `GET`    | `/api/appointments`     | Authenticated | Get appointments                    |
+| `POST`   | `/api/appointments`     | Patient       | Book appointment                    |
+| `GET`    | `/api/services`         | Public        | List medical services               |
+| `GET`    | `/api/departments`      | Public        | List departments                    |
+| `GET`    | `/api/admin/dashboard`  | Admin         | System analytics                    |
 
-Create a `.env` file inside the `backend/` directory with the following variables:
+> Additional prescription, referral, and patient-history endpoints can be added to the API as these modules evolve.
+
+---
+
+# 🔒 Security Practices
+
+HealBook applies multiple security practices to protect the application and user data.
+
+### 🛡️ Authentication
+
+* Clerk authentication for supported user flows.
+* JWT-based authentication for protected backend operations.
+* Protected routes for authenticated users.
+
+### 👮 Role-Based Authorization
+
+Different roles have different permissions:
+
+```text
+Patient ──► Patient resources
+Doctor  ──► Doctor + assigned patient resources
+Admin   ──► Administrative resources
+```
+
+### 🚦 Rate Limiting
+
+API endpoints are protected using request rate limiting to reduce abuse and excessive requests.
+
+### 🧹 Input Sanitization
+
+MongoDB input is sanitized using `express-mongo-sanitize` to reduce NoSQL injection risks.
+
+### 🪖 HTTP Security Headers
+
+`Helmet` is used to configure common HTTP security headers.
+
+### ☁️ Secure File Storage
+
+Uploaded images are processed through Multer and stored using Cloudinary over HTTPS.
+
+### 🔐 Environment Variables
+
+Sensitive credentials and API keys are stored in environment variables rather than hardcoded into application code.
+
+**Never commit `.env` files or secret API keys to GitHub.**
+
+---
+
+# ⚙️ Environment Configuration
+
+Create a `.env` file inside the `backend` directory.
 
 ```env
 PORT=4000
-MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/medical
-JWT_SECRET=your_jwt_secret_key_here
 
-# Cloudinary Integration (For Image Uploads)
-CLOUDINARY_CLOUD_NAME=bz7q2jvr
-CLOUDINARY_API_KEY=268685199777982
-CLOUDINARY_API_SECRET=_vB12Emacg9H0Ox5-yvjcI6P7a0
+MONGO_URI=your_mongodb_connection_string
 
-# Third-party Services
-STRIPE_SECRET_KEY=sk_test_...
+JWT_SECRET=your_jwt_secret
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
+# Stripe
+STRIPE_SECRET_KEY=your_stripe_secret_key
+
+# Frontend
 FRONTEND_URL=http://localhost:5173
-CLERK_SECRET_KEY=sk_test_...
 
-# AI Health Assistant - Gemini API
-# Get your API key from: https://makersuite.google.com/app/apikey
-GEMINI_API_KEY=your_gemini_api_key_here
-# Optional: Gemini model (default: gemini-2.0-flash)
-# GEMINI_MODEL=gemini-2.0-flash
-# Optional: Gemini request timeout in milliseconds (default: 20000)
-# GEMINI_TIMEOUT_MS=20000
+# Clerk
+CLERK_SECRET_KEY=your_clerk_secret_key
 ```
 
-A `.env.example` file is provided in the `backend/` directory for reference.
+A `.env.example` file should be provided as a reference.
 
 ---
 
-## 🚀 Getting Started
+# 🚀 Getting Started
 
-### Prerequisites
-- **Node.js**: v18.0.0 or higher
-- **npm**: v9.0.0 or higher
-- **MongoDB Atlas** or local MongoDB instance
+## Prerequisites
 
----
+Make sure the following are installed:
 
-### Installation Steps
-
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/your-repo/MediCare-Site-main.git
-   cd MediCare-Site-main
-   ```
-
-2. **Install Backend Dependencies**
-   ```bash
-   cd backend
-   npm install
-   ```
-
-3. **Install Frontend Dependencies**
-   ```bash
-   cd ../frontend
-   npm install
-   ```
-
-4. **Install Admin Dependencies**
-   ```bash
-   cd ../admin
-   npm install
-   ```
+* **Node.js** v18+
+* **npm** v9+
+* **MongoDB Atlas** or local MongoDB
+* Git
 
 ---
 
-### Running the Application
+## 1️⃣ Clone the Repository
 
-You can launch each tier in separate terminal windows:
+```bash
+git clone https://github.com/your-username/healbook.git
 
-#### Terminal 1: Start Backend Server (Port 4000)
+cd healbook
+```
+
+---
+
+## 2️⃣ Install Backend Dependencies
+
 ```bash
 cd backend
+
+npm install
+```
+
+---
+
+## 3️⃣ Install Frontend Dependencies
+
+```bash
+cd ../frontend
+
+npm install
+```
+
+---
+
+## 4️⃣ Install Admin Dependencies
+
+```bash
+cd ../admin
+
+npm install
+```
+
+---
+
+# ▶️ Running the Application
+
+Run each application in a separate terminal.
+
+### Terminal 1 — Backend
+
+```bash
+cd backend
+
 npm run dev
 ```
 
-#### Terminal 2: Start Patient Web Site (Port 5173)
+Backend:
+
+```text
+http://localhost:4000
+```
+
+### Terminal 2 — Patient Application
+
 ```bash
 cd frontend
+
 npm run dev
 ```
 
-#### Terminal 3: Start Admin Portal (Port 5174)
+Frontend:
+
+```text
+http://localhost:5173
+```
+
+### Terminal 3 — Admin & Doctor Portal
+
 ```bash
 cd admin
+
 npm run dev
 ```
 
----
+Admin/Doctor portal:
 
-## 🔌 API Endpoints Summary
-
-| HTTP Method | Endpoint | Access Level | Description |
-| :--- | :--- | :--- | :--- |
-| **GET** | `/api/doctors` | Public | Fetch all doctors with search, filtering, and pagination |
-| **GET** | `/api/doctors/:id` | Public | Get detailed profile of a specific doctor |
-| **POST** | `/api/doctors` | Private (Admin) | Create a new doctor record with image upload |
-| **PUT** | `/api/doctors/:id` | Private (Doctor/Admin)| Update doctor details & profile image on Cloudinary |
-| **DELETE** | `/api/doctors/:id` | Private (Admin) | Delete a doctor profile and remove Cloudinary asset |
-| **GET** | `/api/doctor/dashboard` | Private (Doctor) | Get metrics, earnings, and recent appointments |
-| **GET** | `/api/doctor/profile` | Private (Doctor) | Retrieve logged-in doctor profile |
-| **PUT** | `/api/doctor/profile` | Private (Doctor) | Update logged-in doctor profile & Cloudinary avatar |
-| **GET** | `/api/appointments` | Private | Retrieve patient appointments |
-| **POST** | `/api/appointments` | Public/Private | Book a new consultation appointment |
-| **GET** | `/api/services` | Public | List medical services & packages |
-| **GET** | `/api/departments` | Public | List clinical departments & headcount |
-| **GET** | `/api/admin/dashboard` | Private (Admin) | Overall system analytics & stats |
-| **POST** | `/api/admin/doctors/bulk-delete` | Private (Superadmin)| Elevated bulk deletion of doctors |
-| **POST** | `/api/ai/symptom-check` | Private (Patient) | AI symptom check and health guidance |
-| **GET** | `/api/ai/conversations` | Private (Patient) | List patient AI conversations |
-| **GET** | `/api/ai/conversations/latest` | Private (Patient) | Get most recent AI conversation |
-| **GET** | `/api/ai/conversations/:id` | Private (Patient) | Get specific AI conversation |
-| **POST** | `/api/ai/conversations` | Private (Patient) | Create new AI conversation |
-
----
-
-## 🔒 Security Practices
-
-- **Sanitization**: Input fields sanitized against SQL/NoSQL Injection using `express-mongo-sanitize`.
-- **Header Protection**: Standard security headers configured via `helmet`.
-- **Rate Limiting**: API routes rate-limited to 1,000 requests per 15 minutes to prevent abuse.
-- **Secure File Storage**: File uploads processed in-memory / temporary disk via `multer`, securely stored on Cloudinary over TLS/HTTPS, and cleaned up locally immediately after upload.
-
----
-
-## 🤖 AI Health Assistant
-
-The platform includes an AI-powered Health Assistant that provides preliminary health information to patients using Google's Gemini API.
-
-### Features
-
-**Backend (Part 1):**
-- **Symptom Analysis**: Patients can describe their symptoms and receive preliminary guidance
-- **Conversation Management**: Multi-turn conversations with context retention
-- **Emergency Detection**: Deterministic red-flag detection for urgent symptoms
-- **Structured Responses**: AI responses are validated and formatted for patient safety
-- **Rate Limiting**: Protection against abuse (15 requests/minute per patient)
-- **Patient Isolation**: Each patient's conversations are private and secure
-
-**Frontend (Part 2):**
-- **Floating Chatbot**: Clean, modern chat interface accessible from any patient page
-- **Quick Actions**: Pre-built buttons for common symptoms (Fever, Headache, Cold/Cough, Medicine Question)
-- **Real-time Chat**: Live messaging with typing indicators and auto-scroll
-- **Emergency Warnings**: Prominent alerts when urgent medical attention is needed
-- **Appointment Integration**: Direct link to book appointments when recommended
-- **Conversation History**: Automatically loads previous conversations
-- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
-- **Accessibility**: Keyboard navigation, proper labels, and ARIA attributes
-
-### How It Works
-
-1. **Patient clicks the Health Assistant button** (bottom-right corner)
-2. **Chat window opens** with a welcome message and quick action buttons
-3. **Patient describes symptoms** (or clicks a quick action)
-4. **Backend processes the request**:
-   - Checks for emergency red flags (chest pain, difficulty breathing, etc.)
-   - Sends to Gemini AI for analysis
-   - Returns structured response with guidance
-5. **Frontend displays the response** with:
-   - Follow-up questions if needed
-   - Self-care recommendations
-   - Warning signs to watch for
-   - Appointment booking button if recommended
-6. **Emergency detection** shows urgent care warning when needed
-
-### API Endpoints
-
-| HTTP Method | Endpoint | Access Level | Description |
-| :--- | :--- | :--- | :--- |
-| **POST** | `/api/ai/symptom-check` | Private (Patient) | Send a symptom message and receive AI guidance |
-| **GET** | `/api/ai/conversations` | Private (Patient) | List all patient conversations |
-| **GET** | `/api/ai/conversations/latest` | Private (Patient) | Get the most recent conversation |
-| **GET** | `/api/ai/conversations/:id` | Private (Patient) | Get a specific conversation with messages |
-| **POST** | `/api/ai/conversations` | Private (Patient) | Create a new conversation |
-
-### Example Usage
-
-**Symptom Check Request:**
-```bash
-POST /api/ai/symptom-check
-Authorization: Bearer <patient_token>
-Content-Type: application/json
-
-{
-  "message": "I have a headache and fever since yesterday",
-  "conversation_id": "optional-uuid-for-existing-conversation"
-}
+```text
+http://localhost:5174
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "conversation_id": "uuid",
-    "response": "I understand you're experiencing a headache and fever...",
-    "severity": "moderate",
-    "requires_urgent_attention": false,
-    "recommend_appointment": true,
-    "has_upcoming_appointment": false,
-    "degraded": false,
-    "disclaimer": "This is preliminary health information and not a medical diagnosis."
-  }
-}
+---
+
+# 🔄 Core Healthcare Workflow
+
+## Patient Appointment Workflow
+
+```text
+Search Doctor
+     │
+     ▼
+View Doctor Profile
+     │
+     ▼
+Select Date & Time
+     │
+     ▼
+Book Appointment
+     │
+     ▼
+Payment
+     │
+     ▼
+Doctor Consultation
+     │
+     ▼
+Prescription / Referral
+     │
+     ▼
+Medical History Updated
+     │
+     ▼
+Patient Can Access Records Later
 ```
 
-### Safety Features
+## Doctor Consultation Workflow
 
-1. **Deterministic Red-Flag Detection**: Emergency symptoms (chest pain, difficulty breathing, etc.) are detected before AI processing
-2. **No Diagnosis**: The AI never claims certainty or provides definitive diagnoses
-3. **No Prescriptions**: The AI never recommends specific medications or dosages
-4. **Professional Referral**: Always encourages consultation with healthcare professionals
-5. **Fallback Responses**: If Gemini API fails, safe fallback responses are provided
-6. **Input Validation**: All inputs are sanitized and validated
-7. **Rate Limiting**: Prevents abuse and excessive API calls
-8. **Patient Isolation**: Each patient can only access their own conversations
-
-### Configuration
-
-The AI Health Assistant can be configured via environment variables:
-
-**Backend (.env):**
-- `GEMINI_API_KEY`: Your Google Gemini API key (required)
-- `GEMINI_MODEL`: Gemini model to use (default: `gemini-2.0-flash`)
-- `GEMINI_TIMEOUT_MS`: Request timeout in milliseconds (default: `20000`)
-
-**Frontend (.env):**
-- `VITE_BACKEND_URL`: Backend API URL (optional, defaults to localhost:4000 or production URL)
-
-### Frontend Components
-
-**HealthAssistant Component** (`frontend/src/components/HealthAssistant/HealthAssistant.jsx`):
-- Floating chatbot button (bottom-right)
-- Chat window with message history
-- Quick action buttons for common symptoms
-- Emergency warning display
-- Appointment booking integration
-- New conversation button
-- Loading and error states
-
-**AI API Service** (`frontend/src/services/aiApi.js`):
-- `sendSymptomCheck(message, conversationId)`: Send symptom to backend
-- `getLatestConversation()`: Load most recent conversation
-- `createConversation()`: Start new conversation
-- `getConversationById(id)`: Load specific conversation
-- `getConversations(limit, skip)`: List all conversations
+```text
+Doctor receives appointment
+          │
+          ▼
+     View Patient
+          │
+          ▼
+View Previous History
+          │
+          ▼
+     Consultation
+          │
+     ┌────┴────┐
+     ▼         ▼
+Prescription  Referral
+     │         │
+     └────┬────┘
+          ▼
+Patient Medical Record Updated
+```
 
 ---
 
-## 📄 License
+# 🗃️ Digital Medical Records
 
-This project is licensed under the **MIT License**.
+One of the key goals of HealBook is to move important healthcare information from paper-based workflows to a centralized digital system.
+
+### Patient can access:
+
+* Previous medical history
+* Previous consultations
+* Digital prescriptions
+* Appointment history
+
+### Doctor can access:
+
+* Relevant patient history
+* Previous prescriptions
+* Previous consultations
+* Appointment information
+
+### Why this matters
+
+Traditional healthcare workflows often require patients to carry:
+
+```text
+📄 Old Prescriptions
+📄 Medical Reports
+📄 Referral Letters
+📄 Previous Consultation Records
+```
+
+HealBook aims to provide a centralized digital experience:
+
+```text
+             🏥 HealBook
+                  │
+        ┌─────────┴─────────┐
+        ▼                   ▼
+   Patient Records      Doctor Records
+        │                   │
+        ├── History         ├── History
+        ├── Prescriptions   ├── Prescriptions
+        ├── Appointments    └── Referrals
+        └── Consultations
+```
+
+This makes important records easier to access during future consultations.
+
+---
+
+# 🚀 Future Roadmap
+
+HealBook is designed to evolve into a more complete digital healthcare ecosystem.
+
+### 🎥 1. Video Consultation
+
+Enable patients to consult doctors remotely using secure video calls.
+
+Planned capabilities:
+
+* Doctor-patient video calls
+* Appointment-based consultation rooms
+* Waiting room
+* Consultation status
+* Secure session handling
+
+---
+
+### 📱 2. Mobile Application
+
+Develop dedicated Android/iOS applications for:
+
+* Patients
+* Doctors
+
+This would provide easier access to appointments, prescriptions, and medical records.
+
+---
+
+### 🔔 3. Notifications & Reminders
+
+Introduce automated notifications for:
+
+* Appointment confirmations
+* Upcoming appointments
+* Appointment cancellations
+* Prescription updates
+* Referral updates
+
+Potential channels:
+
+* Email
+* Push notifications
+* SMS
+
+---
+
+### 🔄 4. Referral Tracking
+
+Expand the referral system so patients and doctors can track:
+
+```text
+Referral Created
+      ↓
+Referral Sent
+      ↓
+Specialist Accepts
+      ↓
+Consultation
+      ↓
+Referral Completed
+```
+
+---
+
+### 💊 5. Prescription Enhancements
+
+Future versions can support:
+
+* Structured medication details
+* Dosage and duration
+* Prescription history
+* Follow-up reminders
+* Digital prescription viewing
+
+---
+
+### 🧾 6. Complete Electronic Health Record
+
+Expand the medical-history system into a more comprehensive digital health record containing:
+
+* Consultation history
+* Prescriptions
+* Referrals
+* Medical reports
+* Allergies
+* Previous treatments
+* Relevant patient information
+
+---
+
+### 🏥 7. Multi-Hospital / Clinic Support
+
+Allow multiple clinics or hospitals to use the platform while maintaining proper role-based access between organizations.
+
+---
+
+### 🤖 8. Healthcare Automation
+
+Future versions may introduce carefully controlled automation for administrative workflows such as:
+
+* Appointment scheduling assistance
+* Follow-up reminders
+* Prescription notifications
+* Patient communication
+* Administrative task automation
+
+---
+
+### 📈 9. Advanced Analytics
+
+Future analytics could provide authorized administrators with insights such as:
+
+* Appointment trends
+* Doctor utilization
+* Department demand
+* Patient appointment patterns
+* Operational metrics
+
+---
+
+# 💡 Key Engineering Highlights
+
+The project demonstrates practical implementation of several full-stack concepts:
+
+* RESTful API architecture
+* MERN stack development
+* Role-based authorization
+* Authentication using Clerk and JWT
+* MongoDB data modeling
+* Appointment scheduling
+* Database-level duplicate booking prevention
+* Partial unique indexes
+* Payment integration
+* Cloudinary image storage
+* Secure API middleware
+* Rate limiting
+* Input sanitization
+* Responsive React UI
+* Admin dashboard analytics
+* Digital prescriptions
+* Patient medical history
+* Doctor-to-doctor referral workflow
+
+---
+
+# 🧠 Design Principles
+
+### 1. Security First
+
+Healthcare-related information should only be accessible to authorized users.
+
+### 2. Role-Based Access
+
+Patients, doctors, and administrators have different responsibilities and permissions.
+
+### 3. Database-Level Consistency
+
+Important constraints such as appointment uniqueness should not rely only on frontend validation.
+
+### 4. Modular Architecture
+
+Backend services are separated into controllers, models, routes, and middleware to keep the application maintainable.
+
+### 5. Patient-Centric Experience
+
+The platform focuses on reducing friction around:
+
+* Finding doctors
+* Booking appointments
+* Accessing previous records
+* Managing prescriptions
+* Following referrals
+
+---
+
+# 📸 Screenshots
+
+> Add screenshots/GIFs of the major workflows here before the project screening.
+
+Recommended screenshots:
+
+1. Patient Home Page
+2. Doctor Search
+3. Doctor Profile
+4. Appointment Booking
+5. Patient Appointment History
+6. Patient Medical History
+7. Digital Prescription
+8. Doctor Dashboard
+9. Doctor Patient History
+10. Doctor Referral
+11. Admin Dashboard
+
+Example:
+
+```markdown
+## 📸 Screenshots
+
+
+
+
+### Patient Dashboard
+![Patient Dashboard](./screenshots/patient-dashboard.png)
+
+### Doctor Dashboard
+![Doctor Dashboard](./screenshots/doctor-dashboard.png)
+
+### Appointment Booking
+![Appointment Booking](./screenshots/appointment-booking.png)
+
+### Digital Prescription
+![Prescription](./screenshots/prescription.png)
+```
+
+---
+
+# 🤝 Project Structure & Contribution
+
+HealBook follows a modular full-stack architecture so individual modules can be developed and maintained independently.
+
+```text
+Frontend
+   │
+   ▼
+REST API
+   │
+   ▼
+Controllers
+   │
+   ▼
+Services / Business Logic
+   │
+   ▼
+Mongoose Models
+   │
+   ▼
+MongoDB
+```
+
+---
+
+
+
+<p align="center">
+  <b>🏥 HealBook — Making healthcare management more connected, accessible, and digital.</b>
+</p>
