@@ -9,6 +9,7 @@ import UserSync from "./components/UserSync/UserSync";
 import Navbar from "./components/Navbar/Navbar";
 import Footer from "./components/Footer/Footer";
 import HomeDoctors from "./components/HomeDoctors/HomeDoctors";
+// import Certification from "./components/Certification/Certification";
 import Testimonial from "./components/Testimonial/Testimonial";
 
 import DoctorsPage from "./components/DoctorsPage/DoctorsPage";
@@ -146,6 +147,7 @@ function MainLayout() {
               <>
                 <HomeHero />
                 <HomeDoctors />
+                {/* <Certification /> */}
                 <Testimonial />
               </>
             }
